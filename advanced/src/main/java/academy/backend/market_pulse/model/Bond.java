@@ -1,6 +1,7 @@
 package academy.backend.market_pulse.model;
 
 import academy.backend.market_pulse.dictionary.InstrumentType;
+import academy.backend.market_pulse.exception.InvalidInstrumentException;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -22,7 +23,9 @@ public class Bond extends Instrument {
                 BigDecimal couponRate, int maturityYear) {
         super(ticker, name, currency);
         if (couponRate == null || couponRate.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Купонная ставка не может быть отрицательной");
+            throw new InvalidInstrumentException(
+                    InstrumentType.BOND,
+                    "Купонная ставка не может быть отрицательной");
         }
         if (maturityYear < Year.now().getValue()) {
             throw new IllegalArgumentException("Год погашения не может быть в прошлом");

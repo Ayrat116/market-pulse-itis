@@ -1,6 +1,7 @@
 package academy.backend.market_pulse.demo;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 /**
  * Две стороны одной монеты — что происходит с исключением, когда ресурс закрывается вручную
@@ -49,6 +50,19 @@ public class FinallyDemo {
                 System.out.println("Подавленное исключение: " + suppressed);
             }
         }
+
+        Function<Integer, Integer> f = i -> {
+            try {
+                Thread.sleep(1_000);
+                return i;
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    private static int multiplier(int i, int j) throws Exception {
+        return i * j;
     }
 
     /**

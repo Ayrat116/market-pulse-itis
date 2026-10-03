@@ -1,10 +1,13 @@
 package academy.backend.market_pulse.factory;
 
 import academy.backend.market_pulse.dictionary.InstrumentType;
+import academy.backend.market_pulse.model.Bond;
 import academy.backend.market_pulse.model.Currency;
 import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.util.Registry;
 import lombok.experimental.UtilityClass;
+
+import static academy.backend.market_pulse.util.InstrumentValidator.BOND_VALIDATOR;
 
 /**
  * Фабрика, реализованная с помощью SPI.
@@ -21,7 +24,9 @@ public final class InstrumentFactories {
         }
         // TODO: прогнать instrument через InstrumentValidator и бросить InvalidInstrumentException
         //  при нарушении бизнес-правил — валидируем уже созданную сущность, а не входные параметры.
-        return factory.create(ticker, name, currency);
+        var instrument = factory.create(ticker, name, currency);
+        BOND_VALIDATOR.validate((Bond) instrument);
+        return instrument;
     }
 
     private static Registry<InstrumentType, InstrumentFactory> load() {
