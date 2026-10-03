@@ -1,17 +1,13 @@
 package academy.backend.market_pulse.proxy;
 
-import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.repository.InMemoryInstrumentRepository;
 import academy.backend.market_pulse.repository.InstrumentRepository;
-import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Iterator;
-import java.util.concurrent.Callable;
 
 /**
  * Скрывает от клиента, как именно устроена прокси-обёртка над {@link InstrumentRepository},
