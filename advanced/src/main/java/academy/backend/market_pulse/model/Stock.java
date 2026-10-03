@@ -27,12 +27,6 @@ public class Stock extends Instrument implements DividendsAware {
     public Stock(String ticker, String name, Currency currency,
                  String sector, BigDecimal dividendYield) {
         super(ticker, name, currency);
-        if (sector == null || sector.isBlank()) {
-            throw new IllegalArgumentException("Сектор не может быть пустым");
-        }
-        if (dividendYield == null || dividendYield.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Дивидендная доходность не может быть отрицательной");
-        }
         this.sector = sector;
         this.dividendYield = dividendYield;
     }

@@ -16,9 +16,6 @@ public class Etf extends Instrument {
 
     public Etf(String ticker, String name, Currency currency, String trackingIndex) {
         super(ticker, name, currency);
-        if (trackingIndex == null || trackingIndex.isBlank()) {
-            throw new IllegalArgumentException("Отслеживаемый индекс не может быть пустым");
-        }
         this.trackingIndex = trackingIndex;
     }
 

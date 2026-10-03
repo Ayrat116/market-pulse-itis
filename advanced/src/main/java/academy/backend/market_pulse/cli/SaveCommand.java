@@ -1,8 +1,14 @@
 package academy.backend.market_pulse.cli;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.Callable;
 
+import academy.backend.market_pulse.exception.InstrumentSaveException;
+import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.repository.InstrumentRepository;
+import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -20,12 +26,32 @@ public class SaveCommand implements Callable<Integer> {
 
     private final InstrumentRepository repository;
 
-    // TODO №1: реализовать сохранение через try-with-resources
-    // TODO №2: показать боль от связки FI <-> throws
-    // TODO №3: обернуть IOException в InstrumentSaveException, а не отдавать его как есть
-    // TODO №4: реализовать с помощью Vavr.Try
     @Override
     public Integer call() {
-        throw new UnsupportedOperationException("save: реализовать через try-with-resources");
+        try {
+            // NOTICE: Try.withResources — тот же try-with-resources: writer закрывается автоматически,
+            //  а любое исключение (в том числе checked IOException) оказывается внутри Try и
+            //  оборачивается в InstrumentSaveException с сохранением причины.
+            int saved = Try.withResources(() -> new BufferedWriter(new FileWriter(path)))
+                    .of(this::writeAll)
+                    .getOrElseThrow(cause -> new InstrumentSaveException(path, cause));
+            System.out.println("Сохранено инструментов: " + saved + " (" + path + ")");
+            return 0;
+        } catch (InstrumentSaveException e) {
+            System.out.println(e.getMessage());
+            return 1;
+        }
+    }
+
+    private int writeAll(BufferedWriter writer) throws IOException {
+        // NOTICE: repository.forEach(instrument -> writer.write(...)) не скомпилируется:
+        //  Consumer не объявляет checked IOException, поэтому здесь обычный цикл.
+        int count = 0;
+        for (Instrument instrument : repository) {
+            writer.write(instrument.toString());
+            writer.newLine();
+            count++;
+        }
+        return count;
     }
 }
