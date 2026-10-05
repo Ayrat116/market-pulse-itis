@@ -9,22 +9,18 @@ import academy.backend.market_pulse.model.Stock;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/**
- * Реализация {@link InstrumentRepository} поверх {@link LinkedHashMap}: ключ — тикер в верхнем
- * регистре, поиск и проверка дубликата — {@code O(1)} вместо линейного перебора по массиву.
- * {@code LinkedHashMap}, а не {@code HashMap} — ради сохранения порядка добавления в выводе
- * {@code list}.
- */
+// TODO: перевести с массива на LinkedHashMap<String, Instrument> (ключ — тикер в верхнем
+//  регистре) — add/findByTicker станут O(1) вместо линейного перебора; remove/removeIf ниже
+//  реализовать уже поверх неё.
 public class InMemoryInstrumentRepository implements InstrumentRepository {
 
-    private final Map<String, Instrument> instruments = new LinkedHashMap<>();
+    private final Instrument[] instruments = new Instrument[100];
+    private int size = 0;
 
     public InMemoryInstrumentRepository() {
         // Стартовые данные для демонстрации CLI: без них каждый запуск начинается с пустого списка.
@@ -35,45 +31,54 @@ public class InMemoryInstrumentRepository implements InstrumentRepository {
 
     @Override
     public void add(Instrument instrument) {
-        // NOTICE: ключ нормализован к верхнему регистру и при записи, и при чтении — у Map
-        // равенство ключей строгое (String.hashCode/equals чувствительны к регистру), в отличие
-        // от прежнего поиска по массиву через equalsIgnoreCase.
-        String key = instrument.getTicker().toUpperCase();
-        if (instruments.containsKey(key)) {
+        // NOTICE: дубликат ловится тем же findByTicker(...).isPresent(), которым уже пользуется
+        // ListCommand — без него повторное add с тем же тикером молча портило бы данные.
+        if (findByTicker(instrument.getTicker()).isPresent()) {
             throw new DuplicateTickerException(instrument.getTicker());
         }
-        instruments.put(key, instrument);
+        instruments[size++] = instrument;
     }
 
     @Override
     public Optional<Instrument> findByTicker(String ticker) {
-        return Optional.ofNullable(instruments.get(ticker.toUpperCase()));
+        for (Instrument instrument : this) {
+            if (instrument.getTicker().equalsIgnoreCase(ticker)) {
+                return Optional.of(instrument);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
     public boolean remove(String ticker) {
-        return instruments.remove(ticker.toUpperCase()) != null;
+        // TODO: точечное удаление по тикеру — после перехода на Map просто instruments.remove(key).
+        throw new UnsupportedOperationException("remove: реализовать после перехода на Map");
     }
 
     @Override
     public Set<String> removeIf(Predicate<Instrument> filter) {
-        Set<String> removed = new LinkedHashSet<>();
-        // NOTICE: удаление идёт через сам итератор (fail-fast) — заранее неизвестно, сколько и
-        // какие записи подойдут под filter, а прямой instruments.remove(key) внутри этого же
-        // обхода уронил бы ConcurrentModificationException.
-        Iterator<Map.Entry<String, Instrument>> it = instruments.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, Instrument> entry = it.next();
-            if (filter.test(entry.getValue())) {
-                it.remove();
-                removed.add(entry.getKey());
-            }
-        }
-        return removed;
+        // TODO: массовое удаление по фильтру — Iterator.remove() по entrySet(), не instruments.remove(key)
+        //  внутри того же обхода (ConcurrentModificationException).
+        throw new UnsupportedOperationException("removeIf: реализовать после перехода на Map");
     }
 
     @Override
     public Iterator<Instrument> iterator() {
-        return instruments.values().iterator();
+        return new Iterator<>() {
+            private int cursor = 0;
+
+            @Override
+            public boolean hasNext() {
+                return cursor < size;
+            }
+
+            @Override
+            public Instrument next() {
+                if (!hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                return instruments[cursor++];
+            }
+        };
     }
 }
