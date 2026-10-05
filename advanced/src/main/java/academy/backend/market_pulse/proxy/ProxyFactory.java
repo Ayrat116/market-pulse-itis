@@ -1,5 +1,6 @@
 package academy.backend.market_pulse.proxy;
 
+import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.repository.InMemoryInstrumentRepository;
 import academy.backend.market_pulse.repository.InstrumentRepository;
 import lombok.experimental.UtilityClass;
@@ -8,6 +9,9 @@ import net.sf.cglib.proxy.MethodInterceptor;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Скрывает от клиента, как именно устроена прокси-обёртка над {@link InstrumentRepository},
@@ -73,6 +77,53 @@ public final class ProxyFactory {
      * вызовы быстрее, чем через reflection JDK-прокси.
      * <p>Минусы: дополнительная зависимость (cglib), сгенерированный байткод сложнее отлаживать.
      */
+    /**
+     * JDK Dynamic Proxy, кеширующий {@code findByTicker} в {@link LruCache} — {@link LinkedHashMap}
+     * в режиме {@code accessOrder=true} (порядок по последнему обращению, не по вставке) с
+     * переопределённым {@code removeEldestEntry}, вытесняющим самый давно не запрашиваемый тикер
+     * при превышении {@code cacheSize}. {@code add} грубо инвалидирует весь кеш целиком — искать
+     * точечно, что именно устарело, здесь не задача.
+     */
+    public static InstrumentRepository cachingRepository(InstrumentRepository target, int cacheSize) {
+        Map<String, Optional<Instrument>> cache = new LruCache<>(cacheSize);
+        return (InstrumentRepository) Proxy.newProxyInstance(
+                InstrumentRepository.class.getClassLoader(),
+                new Class<?>[]{InstrumentRepository.class},
+                (Object proxy, Method method, Object[] args) -> {
+                    if ("findByTicker".equals(method.getName())) {
+                        String ticker = ((String) args[0]).toUpperCase();
+                        if (cache.containsKey(ticker)) {
+                            System.out.println("Cache hit: " + ticker);
+                            return cache.get(ticker);
+                        }
+                        System.out.println("Cache miss: " + ticker);
+                        Optional<Instrument> result = target.findByTicker(ticker);
+                        cache.put(ticker, result);
+                        return result;
+                    }
+                    if ("add".equals(method.getName())) {
+                        cache.clear();
+                    }
+                    return method.invoke(target, args);
+                });
+    }
+
+    /** {@code accessOrder=true} + {@code removeEldestEntry} — весь механизм LRU в двух строчках. */
+    private static final class LruCache<K, V> extends LinkedHashMap<K, V> {
+
+        private final int maxSize;
+
+        private LruCache(int maxSize) {
+            super(maxSize, 0.75f, true);
+            this.maxSize = maxSize;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+            return size() > maxSize;
+        }
+    }
+
     private static InstrumentRepository cglibProxy() {
         Enhancer enhancer = new Enhancer();
         enhancer.setSuperclass(InMemoryInstrumentRepository.class);

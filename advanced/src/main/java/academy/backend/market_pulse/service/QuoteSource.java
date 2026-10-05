@@ -1,0 +1,23 @@
+package academy.backend.market_pulse.service;
+
+import academy.backend.market_pulse.model.Quote;
+
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * Заглушка внешнего источника котировок: отдаёт заранее заготовленные данные по тикеру, без
+ * реального сетевого взаимодействия. Полноценный сетевой клиент придёт на смену позже.
+ */
+public class QuoteSource {
+
+    private final Map<String, Quote> data;
+
+    public QuoteSource(Map<String, Quote> data) {
+        this.data = data;
+    }
+
+    public Optional<Quote> fetch(String ticker) {
+        return Optional.ofNullable(data.get(ticker.toUpperCase()));
+    }
+}

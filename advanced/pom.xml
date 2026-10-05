@@ -61,6 +61,24 @@
             <version>1.37</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Иммутабельные коллекции и Multimap -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.4.0-jre</version>
+        </dependency>
+        <!-- Мультимножества и теоретико-множественные операции над коллекциями -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
+        </dependency>
+        <!-- Примитивные коллекции без boxing -->
+        <dependency>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil</artifactId>
+            <version>8.5.15</version>
+        </dependency>
     </dependencies>
 
     <build>
