@@ -24,6 +24,28 @@ void example(List<Instrument> instruments) {
 
 ---
 
+## Как создать стрим
+
+| Способ | Пример |
+|---|---|
+| Из коллекции | `list.stream()` |
+| Из массива | `Arrays.stream(arr)` / `Arrays.stream(arr, from, to)` — диапазон индексов |
+| Фабрики | `Stream.of("X", "Y")`, `Stream.empty()`, `Stream.<String>builder().add("one").add("two").build()` |
+| `generate`/`iterate` | бесконечные источники — см. раздел ниже |
+| Библиотеки (`java.nio.file.Files`) | `Files.lines(path)` — ленивая построчная обработка без загрузки всего файла в память |
+
+```java
+void example(Path path) throws IOException {
+    // try-with-resources обязателен: Files.lines держит открытый файловый дескриптор,
+    // пока стрим не закрыт (или не обойдён целиком терминальной операцией)
+    try (Stream<String> lines = Files.lines(path)) {
+        long nonBlank = lines.filter(line -> !line.isBlank()).count();
+    }
+}
+```
+
+---
+
 ## Промежуточные и терминальные операции
 
 - **Промежуточные** возвращают новый стрим и соединяются в цепочку: `filter`, `map`, `sorted`, `limit`, `distinct`.
@@ -34,10 +56,29 @@ void example(List<Instrument> instruments) {
 Короткозамкнутые операции (`limit`, `findFirst`, `anyMatch`) останавливают обработку, как только результат определён,
 не дожидаясь конца источника — это же свойство делает возможными бесконечные стримы (`Stream.iterate`).
 
+| Операция | Принимает | Что делает |
+|---|---|---|
+| `peek` | `Consumer<T>` | побочный эффект на каждый элемент, сам элемент не меняет (отладка/логирование — не замена `map`) |
+| `distinct` | — | убирает дубликаты (`equals`/`hashCode`) |
+| `skip(n)` / `limit(n)` | — | пропустить первые `n` / взять не больше `n` |
+| `flatMap` | `Function<T, Stream<R>>` | разворачивает «стрим стримов» в один плоский стрим |
+| `sorted` | `Comparator<T>` (или natural order) | сортирует |
+| `findFirst` / `findAny` | — | первый/любой подошедший элемент после `filter`, `Optional<T>` |
+| `count` | — | сколько элементов в стриме |
+| `max` / `min` | `Comparator<T>` | максимальный/минимальный элемент, `Optional<T>` |
+| `anyMatch` / `allMatch` / `noneMatch` | `Predicate<T>` | удовлетворяют ли элементы условию (хотя бы один / все / ни один) |
+
 ```java
 void example(List<Quote> quotes) {
     boolean hasAnyLoser = quotes.stream()
             .anyMatch(quote -> quote.getChangePercent().signum() < 0);   // остановится на первом же падении
+
+    Optional<Quote> firstGainer = quotes.stream()
+            .filter(quote -> quote.getChangePercent().signum() > 0)
+            .findFirst();
+
+    Optional<Quote> topGainer = quotes.stream()
+            .max(Comparator.comparing(Quote::getChangePercent));
 }
 ```
 
@@ -165,6 +206,26 @@ void example() {
 > следующей.)
 
 ---
+
+## Что ещё важно знать
+
+1. **Элементы проходят этапы по одному, до конца конвейера** — а не «сначала все `filter`, потом все `map`»: для
+   каждого элемента выполняются все операции подряд, прежде чем конвейер перейдёт к следующему элементу. Отсюда и
+   работают короткозамкнутые операции (`limit`, `findFirst`) — не нужно гонять через весь конвейер элементы, которые
+   уже не понадобятся.
+2. **Стримы Lazy (ленивые)** — ничего не выполняется, если нет терминальной операции. `quotes.stream().filter(...)`
+   без `.toList()`/`.forEach(...)` в конце — просто описание, не выполнение.
+3. **Стримы для примитивов** — `IntStream`/`LongStream`/`DoubleStream` не используют боксинг, поэтому быстрее, чем
+   `Stream<Integer>` на тех же данных (см. материал «Spliterator и параллельные стримы» — боксинг там же в списке
+   причин, почему параллелизм может не окупаться).
+4. **С Java 11 есть `.toList()`** как терминальная операция — короче `collect(Collectors.toList())` и сразу
+   неизменяемый список (в отличие от `Collectors.toList()`, который ничего не гарантирует про изменяемость
+   результата).
+5. **Стримы одноразовые** — переиспользовать тот же стрим после терминальной операции нельзя
+   (`IllegalStateException`).
+6. **`collect` заслуживает отдельного изучения** — в этом материале разобрана лишь часть `Collectors`; `collect`
+   принимает и произвольный, собственный `Collector` (три части: поставщик контейнера, накопление элемента, слияние
+   контейнеров — тот же принцип, что у `Gatherer`, но для терминальной операции, см. материал «Gatherer API»).
 
 ## Оговорки
 

@@ -13,16 +13,52 @@
 
 ## Устройство Gatherer
 
-Gatherer описывается четырьмя частями (нужные — переопределяются, остальные опускаются):
+Gatherer описывается четырьмя методами (нужные — переопределяются, остальные опускаются):
 
-- **initializer** — создаёт изменяемое состояние (например, окно последних `k` значений);
-- **integrator** — обрабатывает очередной элемент: читает и обновляет состояние, может испустить элементы вниз по
-  конвейеру через `downstream.push(...)` и досрочно завершить обработку, вернув `false`;
-- **combiner** — сливает состояния двух частей при параллельном выполнении (для последовательных gatherer не нужен);
-- **finisher** — по окончании входа испускает «хвост» (например, незакрытый остаток).
+1. **`initializer()`** — создаёт новое состояние `A` для каждой последовательной секции (например, окно последних
+   `k` значений).
+2. **`integrator(state, element, downstream)`** — обрабатывает элемент: обновляет `state`, при необходимости
+   запускает `downstream` (испускает элемент вниз по конвейеру). Возвращает `boolean` — ровно как
+   `Spliterator.tryAdvance()` (см. материал «Spliterator и параллельные стримы»): `true` — продолжать, `false` —
+   завершить обработку досрочно.
+3. **`combiner(state1, state2)`** — сливает два состояния (для параллельных стримов), необязателен.
+4. **`finisher(state, downstream)`** — завершающий выброс остатков из состояния, необязателен.
 
 Ключевое отличие от `map`/`filter` — состояние между элементами; отличие от `Collector` — результат остаётся стримом,
 конвейер продолжается.
+
+---
+
+## Реальная задача: разброс цены в скользящем окне (SlidingSpreadGatherer)
+
+Собрать разницу между максимальным и минимальным значением в скользящем окне из `N` последних цен — классический
+пример, под который и создавался Gatherer API: ни `map`, ни `filter`, ни терминальный `reduce` не выражают «помни
+последние `N` значений и пересчитывай что-то по ним на каждый новый элемент» — для этого нужна промежуточная
+операция с собственным состоянием.
+
+```java
+public static Gatherer<BigDecimal, ?, BigDecimal> spread(int windowSize) {
+    return Gatherer.ofSequential(
+            State::new,                                    // initializer
+            (state, price, downstream) -> {                // integrator
+                state.window.addLast(price);
+                if (state.window.size() > windowSize) {
+                    state.window.removeFirst();
+                }
+                if (state.window.size() == windowSize) {
+                    BigDecimal min = state.window.stream().min(Comparator.naturalOrder()).orElseThrow();
+                    BigDecimal max = state.window.stream().max(Comparator.naturalOrder()).orElseThrow();
+                    return downstream.push(max.subtract(min));
+                }
+                return true;
+            });
+}
+```
+
+Используется в `history TICKER --spread --sma K` (`HistoryCommand`, `SlidingSpreadGatherer`); тот же пример —
+`demo/GathererDemo.java`. Здесь min/max окна пересчитываются заново на каждый элемент (`O(windowSize)` на шаг) —
+просто и наглядно; для больших окон это можно оптимизировать до амортизированного `O(1)`, обновляя min/max
+инкрементально, как в `MovingAverageGatherer` ниже обновляется сумма.
 
 ---
 
@@ -65,7 +101,7 @@ void example(List<BigDecimal> prices) {
 
 ---
 
-## Кастомный gatherer: скользящее среднее (MovingAverageGatherer)
+## Ещё один кастомный gatherer: скользящее среднее (MovingAverageGatherer)
 
 Своя промежуточная операция создаётся через `Gatherer.ofSequential(initializer, integrator)`. Скользящее среднее «на
 лету» держит окно последних `k` цен и их сумму, испуская среднее, как только окно заполнилось — в отличие от

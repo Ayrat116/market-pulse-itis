@@ -1,6 +1,7 @@
 package academy.backend.market_pulse.demo;
 
 import academy.backend.market_pulse.gather.MovingAverageGatherer;
+import academy.backend.market_pulse.gather.SlidingSpreadGatherer;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -37,6 +38,9 @@ public class GathererDemo {
 
         System.out.println("=============== Gatherers.mapConcurrent(3) — ограниченная конкурентность ===============");
         mapConcurrent(List.of("SBER", "GAZP", "LKOH", "AAPL", "FXUS"));
+
+        System.out.println("=============== SlidingSpreadGatherer.spread(3) — кастомный, реальная задача ===============");
+        slidingSpread(prices);
     }
 
     /**
@@ -122,6 +126,18 @@ public class GathererDemo {
             Thread.currentThread().interrupt();
         }
         return ticker + ":OK";
+    }
+
+    /**
+     * {@link SlidingSpreadGatherer} — разница между max и min в скользящем окне из 3 цен подряд.
+     * Та самая «реальная задача» из материала «Gatherer API»: ни {@code map}, ни {@code filter},
+     * ни {@code reduce} сами по себе не выразят «окно из последних N значений» — нужно состояние
+     * между соседними элементами конвейера, то есть ровно то, для чего и нужен Gatherer API.
+     */
+    private static void slidingSpread(List<BigDecimal> prices) {
+        prices.stream()
+                .gather(SlidingSpreadGatherer.spread(3))
+                .forEach(spread -> System.out.println("  разброс (max - min) = " + spread));
     }
 
     private static BigDecimal average(List<BigDecimal> window) {
