@@ -24,6 +24,60 @@ void example(List<Quote> quotes) {
 
 ---
 
+## Самописный Spliterator: ArraySpliterator
+
+Полноценный `Spliterator<T>` для произвольного источника — задача объёмная (нужно честно поддержать `SORTED`,
+`CONCURRENT`, работу с не-`RandomAccess`-источниками и т.д.), но для источника с произвольным доступом по индексу
+(как `List` или массив) контракт укладывается в несколько методов — `ArraySpliterator` в коде проекта
+(`spliterator/ArraySpliterator.java`) хранит не сам список, а диапазон индексов `[from, to)` в нём:
+
+```java
+class ArraySpliterator<T> implements Spliterator<T> {
+    private final List<T> source;
+    private int from;
+    private final int to;
+
+    public boolean tryAdvance(Consumer<? super T> action) {
+        if (from >= to) return false;
+        action.accept(source.get(from));
+        from++;
+        return true;
+    }
+
+    public Spliterator<T> trySplit() {
+        int remaining = to - from;
+        if (remaining < 2) return null;             // делить больше не имеет смысла
+        int splitPoint = from + remaining / 2;
+        Spliterator<T> left = new ArraySpliterator<>(source, from, splitPoint);
+        this.from = splitPoint;                      // себе оставляем вторую половину
+        return left;
+    }
+
+    public long estimateSize() { return to - from; }
+
+    public int characteristics() { return ORDERED | SIZED | SUBSIZED | IMMUTABLE; }
+}
+```
+
+`trySplit()` — именно тот метод, который `parallelStream()` вызывает рекурсивно под капотом: каждый вызов делит
+диапазон пополам, пока куски не станут слишком малы (`remaining < 2`), и раздаёт их в `ForkJoinPool`. Собрать из
+такого спилитератора параллельный стрим напрямую, не через `Collection.parallelStream()`, можно через
+`StreamSupport`:
+
+```java
+void example(List<Quote> quotes) {
+    double average = StreamSupport.stream(new ArraySpliterator<>(quotes), true)
+            .mapToDouble(quote -> quote.getChangePercent().doubleValue())
+            .average()
+            .orElse(0.0);
+}
+```
+
+Полное сравнение встроенного и самописного спилитератора бок о бок (размер, `trySplit`, результат параллельной
+агрегации — совпадает) — `demo/SpliteratorDemo.java`.
+
+---
+
 ## Как работает parallelStream()
 
 `collection.parallelStream()` (или `.stream().parallel()`) рекурсивно раскалывает источник через `trySplit`, раздаёт

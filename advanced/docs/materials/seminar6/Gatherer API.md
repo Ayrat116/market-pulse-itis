@@ -41,12 +41,27 @@ void example(List<BigDecimal> prices) {
             .gather(Gatherers.windowSliding(3))   // окна по 3 подряд идущих цены
             .toList();
 
+    // windowFixed: НЕперекрывающиеся пакеты — в отличие от windowSliding, соседние пакеты не
+    // делят между собой элементы; последний пакет может быть короче n
+    List<List<BigDecimal>> batches = prices.stream()
+            .gather(Gatherers.windowFixed(2))
+            .toList();
+
     // scan: "растущий итог" цены вместо одной суммы
     List<BigDecimal> runningTotal = prices.stream()
             .gather(Gatherers.scan(() -> BigDecimal.ZERO, BigDecimal::add))
             .toList();
+
+    // mapConcurrent: тот же map, но до n вызовов функции параллельно — для mapper'а, который сам
+    // по себе медленный и блокирующий (поход в сеть), а не арифметика на CPU
+    List<String> enriched = List.of("SBER", "GAZP", "LKOH").stream()
+            .gather(Gatherers.mapConcurrent(3, this::fetchFromSlowExternalService))
+            .toList();
 }
 ```
+
+Все четыре фабрики на одних данных, с замером времени у `mapConcurrent` (обычный `map` против `mapConcurrent(3)` на
+«медленном» вызове) — `demo/GathererDemo.java`.
 
 ---
 
