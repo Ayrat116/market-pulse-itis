@@ -48,4 +48,15 @@ public class QuoteService {
     public Optional<Quote> cached(String ticker) {
         return Optional.ofNullable(cache.get(ticker.toUpperCase()));
     }
+
+    /**
+     * Удобная обёртка «запросить и сразу получить»: кладёт запрос в очередь, обрабатывает её и
+     * отдаёт котировку из кеша. Нужна командам, которым котировка по конкретному тикеру требуется
+     * прямо сейчас, а не отложенно (семинар 6, {@code compare}).
+     */
+    public Optional<Quote> quoteFor(String ticker) {
+        request(ticker);
+        processAll();
+        return cached(ticker);
+    }
 }
