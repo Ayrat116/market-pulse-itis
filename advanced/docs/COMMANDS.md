@@ -84,8 +84,8 @@ SBER: 250.00 RUB ▲ 1.20%
 GAZP: 120.50 RUB ▼ 0.80%
 ```
 
-Котировка есть только для `SBER` и `GAZP` (заготовлены в `Main.sampleQuotes()`); для остальных
-тикеров — `Котировка не найдена: <TICKER>`.
+Котировка есть для `SBER`, `GAZP`, `LKOH`, `AAPL`, `OFZ26233`, `FXUS` (заготовлены в
+`Main.sampleQuotes()`, семинар 6); для остальных тикеров — `Котировка не найдена: <TICKER>`.
 
 ## remove
 
@@ -131,4 +131,85 @@ save instruments.txt
 
 ```
 Сохранено инструментов: 3 (instruments.txt)
+```
+
+## stats
+
+Семинар 6. Печатает все зарегистрированные статистики (см. `docs/materials/seminar6/Статистика через Stat.md`) —
+каждая строка: код статистики и её результат над шестью котировками `Main.sampleQuotes()`.
+
+```
+stats
+```
+
+```bash
+stats
+```
+
+```
+COUNT_BY_TYPE: {ETF=1, BOND=1, STOCK=4}
+COUNT_BY_CURRENCY: {USD=2, RUB=4}
+AVERAGE_CHANGE: 0.6583333333333333
+TOTAL_PRICE: 8482.65
+GAIN_LOSS_SPLIT: {false=2, true=4}
+```
+
+Новая статистика добавляется без изменения `StatsCommand`: класс в `stat.impl` + значение в `StatCode` + строка в
+`Main.stats()`.
+
+## compare
+
+Семинар 6. Сравнить доходность инструментов по тикерам — по убыванию `changePercent`; тикеры, которых нет в
+`QuoteSource`, молча пропускаются.
+
+```
+compare <TICKER> [TICKER...]
+```
+
+```bash
+compare SBER GAZP LKOH
+```
+
+```
+LKOH: 7100.00 RUB ▲ 2.30%
+SBER: 250.00 RUB ▲ 1.20%
+GAZP: 120.50 RUB ▼ 0.80%
+```
+
+## movers
+
+Семинар 6. Топ инструментов по изменению цены среди всех котировок `QuoteSource` — по умолчанию растущие,
+`--losers` — упавшие.
+
+```
+movers [--top N] [--losers]
+```
+
+```bash
+movers --top 3
+movers --top 2 --losers
+```
+
+```
+LKOH: 7100.00 RUB ▲ 2.30%
+SBER: 250.00 RUB ▲ 1.20%
+FXUS: 6.85 USD ▲ 0.90%
+```
+
+## history
+
+Семинар 6. Скользящее среднее по истории цен инструмента — через Gatherer API (`MovingAverageGatherer`). История
+цен — заглушка-`Map` в `Main.samplePriceHistory()`, есть только для `SBER` и `LKOH`.
+
+```
+history <TICKER> [--sma K]
+```
+
+```bash
+history SBER --sma 3
+```
+
+```
+Цены: [244.00, 246.50, 245.00, 248.00, 250.00, 249.50, 251.20]
+SMA(3): [245.17, 246.50, 247.67, 249.17, 250.23]
 ```
