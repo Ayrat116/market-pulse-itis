@@ -18,9 +18,9 @@ public class CountByCurrencyStat implements Stat<Map<Currency, Long>> {
 
     @Override
     public Map<Currency, Long> calculateStats(List<Quote> quotes) {
-        return quotes.stream()
-                .collect(Collectors.groupingBy(
-                        quote -> quote.getInstrument().getCurrency(),
-                        Collectors.counting()));
+        // NOTICE: простой groupingBy + counting — опорная точка перед более сложными collect'ами
+        // этого же этапа (TickersByTypeStat, GainLossSplitStat).
+        // TODO: семинар 6, этап 3 — groupingBy + counting
+        throw new UnsupportedOperationException("CountByCurrencyStat ещё не реализован");
     }
 }

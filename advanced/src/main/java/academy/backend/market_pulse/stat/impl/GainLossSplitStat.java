@@ -22,9 +22,9 @@ public class GainLossSplitStat implements Stat<Map<Boolean, Long>> {
 
     @Override
     public Map<Boolean, Long> calculateStats(List<Quote> quotes) {
-        return quotes.stream()
-                .collect(Collectors.partitioningBy(
-                        quote -> quote.getChangePercent().signum() > 0,
-                        Collectors.counting()));
+        // NOTICE: классификатор булев (changePercent > 0) — поэтому partitioningBy, а не
+        // groupingBy; второй коллектор (counting) — тот же приём, что в CountByCurrencyStat.
+        // TODO: семинар 6, этап 3 — partitioningBy + counting
+        throw new UnsupportedOperationException("GainLossSplitStat ещё не реализован");
     }
 }

@@ -27,12 +27,11 @@ public class WindowedAveragePriceStat implements Stat<List<BigDecimal>> {
 
     @Override
     public List<BigDecimal> calculateStats(List<Quote> quotes) {
-        return quotes.stream()
-                .map(Quote::getPrice)
-                .gather(Gatherers.windowSliding(WINDOW_SIZE))
-                .map(window -> window.stream()
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .divide(BigDecimal.valueOf(window.size()), 2, RoundingMode.HALF_UP))
-                .toList();
+        // NOTICE: Gatherers.windowSliding(WINDOW_SIZE) сам собирает окна-списки — дальше обычный
+        // map считает среднее в каждом (reduce + divide, HALF_UP до 2 знаков). Сравнить с
+        // NaiveMovingAveragePriceStat (этап 3, то же без Gatherer) и с MovingAveragePriceStat
+        // (этап 5, кастомный Gatherer без материализации списков-окон).
+        // TODO: семинар 6, этап 5 — Gatherers.windowSliding + map
+        throw new UnsupportedOperationException("WindowedAveragePriceStat ещё не реализован");
     }
 }

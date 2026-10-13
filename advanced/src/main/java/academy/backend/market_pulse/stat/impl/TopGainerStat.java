@@ -17,7 +17,9 @@ public class TopGainerStat implements Stat<Optional<Quote>> {
 
     @Override
     public Optional<Quote> calculateStats(List<Quote> quotes) {
-        return quotes.stream()
-                .max(Comparator.comparing(Quote::getChangePercent));
+        // NOTICE: max(Comparator) -> Optional<Quote>, а не Quote: пустой список — валидный случай,
+        // не ошибка.
+        // TODO: семинар 6, этап 3 — max(Comparator)
+        throw new UnsupportedOperationException("TopGainerStat ещё не реализован");
     }
 }

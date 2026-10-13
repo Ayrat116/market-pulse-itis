@@ -19,9 +19,9 @@ public class AverageChangeStat implements Stat<Double> {
 
     @Override
     public Double calculateStats(List<Quote> quotes) {
-        return quotes.stream()
-                .mapToDouble(quote -> quote.getChangePercent().doubleValue())
-                .average()
-                .orElse(0.0);
+        // NOTICE: mapToDouble + average — перевод BigDecimal в double теряет точность, но для
+        // отображаемого процента это приемлемо (контраст с TotalPriceStat, где считаются деньги).
+        // TODO: семинар 6, этап 3 — mapToDouble + average
+        throw new UnsupportedOperationException("AverageChangeStat ещё не реализован");
     }
 }

@@ -33,12 +33,11 @@ public class ArraySpliterator<T> implements Spliterator<T> {
     /** Перебор: отдать текущий элемент и сдвинуться на один вперёд; {@code false} — диапазон исчерпан. */
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
-        if (from >= to) {
-            return false;
-        }
-        action.accept(source.get(from));
-        from++;
-        return true;
+        // NOTICE: аналог hasNext()+next() итератора — если следующий элемент есть (from < to),
+        // применить к нему action, сдвинуть from и вернуть true; если диапазон исчерпан —
+        // false, без исключений.
+        // TODO: семинар 6, этап 4 — tryAdvance
+        throw new UnsupportedOperationException("ArraySpliterator.tryAdvance ещё не реализован");
     }
 
     /**
@@ -49,14 +48,11 @@ public class ArraySpliterator<T> implements Spliterator<T> {
      */
     @Override
     public Spliterator<T> trySplit() {
-        int remaining = to - from;
-        if (remaining < 2) {
-            return null;
-        }
-        int splitPoint = from + remaining / 2;
-        Spliterator<T> left = new ArraySpliterator<>(source, from, splitPoint);
-        this.from = splitPoint;
-        return left;
+        // NOTICE: делит диапазон пополам; себе оставляет ВТОРУЮ половину (сдвигает свой from), в
+        // новый Spliterator отдаёт ПЕРВУЮ (from исходный, to = splitPoint). null, если осталось
+        // меньше двух элементов — делить дальше не имеет смысла.
+        // TODO: семинар 6, этап 4 — trySplit
+        throw new UnsupportedOperationException("ArraySpliterator.trySplit ещё не реализован");
     }
 
     /** Размер известен точно (диапазон индексов) — отсюда характеристика {@code SIZED}. */
