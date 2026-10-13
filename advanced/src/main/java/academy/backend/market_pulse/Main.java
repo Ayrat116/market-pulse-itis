@@ -26,7 +26,11 @@ import academy.backend.market_pulse.stat.impl.AverageChangeStat;
 import academy.backend.market_pulse.stat.impl.CountByCurrencyStat;
 import academy.backend.market_pulse.stat.impl.CountByTypeStat;
 import academy.backend.market_pulse.stat.impl.GainLossSplitStat;
+import academy.backend.market_pulse.stat.impl.MovingAveragePriceStat;
+import academy.backend.market_pulse.stat.impl.ParallelAverageChangeStat;
+import academy.backend.market_pulse.stat.impl.TopGainerStat;
 import academy.backend.market_pulse.stat.impl.TotalPriceStat;
+import academy.backend.market_pulse.stat.impl.WindowedAveragePriceStat;
 import picocli.CommandLine;
 
 import java.math.BigDecimal;
@@ -89,6 +93,17 @@ public class Main {
      * Статистики, которые печатает {@code stats} (семинар 6). Добавить новую — написать класс,
      * реализующий {@link Stat}, в {@code stat.impl}, и дописать его сюда; сам {@code StatsCommand}
      * не меняется — ровно тот же принцип, что у {@code InstrumentFilter}.
+     *
+     * <p>NOTICE для семинариста — порядок списка соответствует этапам занятия:
+     * <ul>
+     *     <li>первые шесть — базовые статистики на дефолтных операциях стрима;</li>
+     *     <li>{@code ParallelAverageChangeStat} — многопоточные стримы, кастомный {@code Spliterator}
+     *     ({@code spliterator/ArraySpliterator.java});</li>
+     *     <li>последние две — Gatherer API: встроенный ({@code Gatherers.windowSliding}) и
+     *     кастомный ({@code gather/MovingAverageGatherer.java}) на одной и той же формуле.</li>
+     * </ul>
+     * Всё перечисленное уже реализовано как эталон — вживую на занятии пишется заново тот же код,
+     * эталон остаётся под рукой для сверки.
      */
     private static List<Stat<?>> stats() {
         return List.of(
@@ -96,7 +111,11 @@ public class Main {
                 new CountByCurrencyStat(),
                 new AverageChangeStat(),
                 new TotalPriceStat(),
-                new GainLossSplitStat());
+                new GainLossSplitStat(),
+                new TopGainerStat(),
+                new ParallelAverageChangeStat(),
+                new WindowedAveragePriceStat(),
+                new MovingAveragePriceStat());
     }
 
     /**

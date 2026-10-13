@@ -1,7 +1,7 @@
 package academy.backend.market_pulse.stat;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
-import academy.backend.market_pulse.model.aware.StatCodeAware;
 
 import java.util.List;
 
@@ -25,7 +25,16 @@ import java.util.List;
  *
  * @param <S> тип результата конкретной статистики
  */
-public interface Stat<S> extends StatCodeAware {
+public interface Stat<S> {
+
+    /**
+     * Подписывает статистику в выводе ({@code StatCode}), не завязываясь на
+     * {@code getClass().getSimpleName()}. Раньше это был отдельный маркерный интерфейс
+     * {@code StatCodeAware} (по аналогии с {@code InstrumentTypeAware} у {@code InstrumentFactory})
+     * — здесь он не нужен: у {@code Stat} один потребитель этого метода ({@code StatsCommand}), а
+     * не разнородное семейство типов, которым важно знать только код и ничего больше.
+     */
+    StatCode getCode();
 
     S calculateStats(List<Quote> quotes);
 }
