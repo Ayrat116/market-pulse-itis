@@ -24,10 +24,11 @@ import academy.backend.market_pulse.service.QuoteSource;
 import academy.backend.market_pulse.stat.Stat;
 import academy.backend.market_pulse.stat.impl.AverageChangeStat;
 import academy.backend.market_pulse.stat.impl.CountByCurrencyStat;
-import academy.backend.market_pulse.stat.impl.CountByTypeStat;
 import academy.backend.market_pulse.stat.impl.GainLossSplitStat;
 import academy.backend.market_pulse.stat.impl.MovingAveragePriceStat;
+import academy.backend.market_pulse.stat.impl.NaiveMovingAveragePriceStat;
 import academy.backend.market_pulse.stat.impl.ParallelAverageChangeStat;
+import academy.backend.market_pulse.stat.impl.TickersByTypeStat;
 import academy.backend.market_pulse.stat.impl.TopGainerStat;
 import academy.backend.market_pulse.stat.impl.TotalPriceStat;
 import academy.backend.market_pulse.stat.impl.WindowedAveragePriceStat;
@@ -96,23 +97,27 @@ public class Main {
      *
      * <p>NOTICE для семинариста — порядок списка соответствует этапам занятия:
      * <ul>
-     *     <li>первые шесть — базовые статистики на дефолтных операциях стрима;</li>
+     *     <li>первые семь — базовые статистики на дефолтных операциях стрима;
+     *     {@code NaiveMovingAveragePriceStat} — версия «в лоб» без Gatherer API, переписывается
+     *     ниже;</li>
      *     <li>{@code ParallelAverageChangeStat} — многопоточные стримы, кастомный {@code Spliterator}
      *     ({@code spliterator/ArraySpliterator.java});</li>
      *     <li>последние две — Gatherer API: встроенный ({@code Gatherers.windowSliding}) и
-     *     кастомный ({@code gather/MovingAverageGatherer.java}) на одной и той же формуле.</li>
+     *     кастомный ({@code gather/MovingAverageGatherer.java}) — {@code MovingAveragePriceStat}
+     *     переписывает {@code NaiveMovingAveragePriceStat} той же формулой, другим способом.</li>
      * </ul>
      * Всё перечисленное уже реализовано как эталон — вживую на занятии пишется заново тот же код,
      * эталон остаётся под рукой для сверки.
      */
     private static List<Stat<?>> stats() {
         return List.of(
-                new CountByTypeStat(),
+                new TickersByTypeStat(),
                 new CountByCurrencyStat(),
                 new AverageChangeStat(),
                 new TotalPriceStat(),
                 new GainLossSplitStat(),
                 new TopGainerStat(),
+                new NaiveMovingAveragePriceStat(),
                 new ParallelAverageChangeStat(),
                 new WindowedAveragePriceStat(),
                 new MovingAveragePriceStat());

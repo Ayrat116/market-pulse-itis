@@ -6,12 +6,13 @@ package academy.backend.market_pulse.dictionary;
  * не завязываться на {@code getClass().getSimpleName()} там, где нужно подписать результат.
  */
 public enum StatCode {
-    COUNT_BY_TYPE,
+    TICKERS_BY_TYPE,
     COUNT_BY_CURRENCY,
     AVERAGE_CHANGE,
     TOTAL_PRICE,
     GAIN_LOSS_SPLIT,
     TOP_GAINER,
+    NAIVE_MOVING_AVERAGE_PRICE,
     PARALLEL_AVERAGE_CHANGE,
     WINDOWED_AVERAGE_PRICE,
     MOVING_AVERAGE_PRICE

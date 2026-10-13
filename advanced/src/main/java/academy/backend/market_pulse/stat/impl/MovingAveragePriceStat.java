@@ -12,10 +12,12 @@ import java.util.List;
 // NOTICE: семинарист пишет этот класс вживую — кастомный Gatherer (тот же MovingAverageGatherer,
 // что уже использует history TICKER --sma K), в паре с предыдущим (встроенный windowSliding).
 /**
- * То же скользящее среднее цены по окнам из {@value #WINDOW_SIZE}, что в
- * {@link WindowedAveragePriceStat}, но через кастомный {@link MovingAverageGatherer}: окно и сумма
- * — состояние {@code integrator}, среднее считается инкрементально, без материализации
- * списков-окон.
+ * Переписанный {@link NaiveMovingAveragePriceStat}: та же формула — скользящее среднее цены по
+ * окнам из {@value #WINDOW_SIZE} — но через кастомный {@link MovingAverageGatherer}. Окно и сумма
+ * — состояние {@code integrator}, среднее считается инкрементально за один проход, без
+ * {@code subList} и без пересчёта заново на каждое окно — см. {@link NaiveMovingAveragePriceStat}
+ * для версии «в лоб» на базовых операциях и {@link WindowedAveragePriceStat} — промежуточную
+ * версию на встроенном {@code Gatherers.windowSliding}.
  */
 public class MovingAveragePriceStat implements Stat<List<BigDecimal>> {
 
