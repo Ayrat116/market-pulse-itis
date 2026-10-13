@@ -37,21 +37,27 @@ Gatherer описывается четырьмя методами (нужные 
 операция с собственным состоянием.
 
 ```java
-public static Gatherer<BigDecimal, ?, BigDecimal> spread(int windowSize) {
-    return Gatherer.ofSequential(
-            State::new,                                    // initializer
-            (state, price, downstream) -> {                // integrator
-                state.window.addLast(price);
-                if (state.window.size() > windowSize) {
-                    state.window.removeFirst();
+void example(List<BigDecimal> prices) {
+    int windowSize = 3;
+
+    // initializer: окно последних windowSize цен — состояние gatherer'а
+    Gatherer<BigDecimal, Deque<BigDecimal>, BigDecimal> spread = Gatherer.ofSequential(
+            ArrayDeque::new,
+            // integrator: на каждую цену — обновить окно и, если оно заполнено, испустить разброс
+            (window, price, downstream) -> {
+                window.addLast(price);
+                if (window.size() > windowSize) {
+                    window.removeFirst();
                 }
-                if (state.window.size() == windowSize) {
-                    BigDecimal min = state.window.stream().min(Comparator.naturalOrder()).orElseThrow();
-                    BigDecimal max = state.window.stream().max(Comparator.naturalOrder()).orElseThrow();
+                if (window.size() == windowSize) {
+                    BigDecimal min = window.stream().min(Comparator.naturalOrder()).orElseThrow();
+                    BigDecimal max = window.stream().max(Comparator.naturalOrder()).orElseThrow();
                     return downstream.push(max.subtract(min));
                 }
                 return true;
             });
+
+    List<BigDecimal> spreadByWindow = prices.stream().gather(spread).toList();
 }
 ```
 
@@ -109,20 +115,30 @@ void example(List<BigDecimal> prices) {
 хранит все окна в памяти:
 
 ```java
-public static Gatherer<BigDecimal, ?, BigDecimal> movingAverage(int windowSize) {
-    return Gatherer.ofSequential(
-            State::new,                                   // initializer
-            (state, price, downstream) -> {               // integrator
-                state.window.addLast(price);
-                state.sum = state.sum.add(price);
-                if (state.window.size() > windowSize) {
-                    state.sum = state.sum.subtract(state.window.removeFirst());
-                }
-                if (state.window.size() == windowSize) {
-                    return downstream.push(state.average(windowSize));
-                }
-                return true;
-            });
+public final class MovingAverageGatherer {
+
+    public static Gatherer<BigDecimal, ?, BigDecimal> movingAverage(int windowSize) {
+        return Gatherer.ofSequential(
+                State::new,                                   // initializer
+                (state, price, downstream) -> {                // integrator
+                    state.window.addLast(price);
+                    state.sum = state.sum.add(price);
+                    if (state.window.size() > windowSize) {
+                        state.sum = state.sum.subtract(state.window.removeFirst());
+                    }
+                    if (state.window.size() == windowSize) {
+                        BigDecimal average = state.sum.divide(
+                                BigDecimal.valueOf(windowSize), 2, RoundingMode.HALF_UP);
+                        return downstream.push(average);
+                    }
+                    return true;
+                });
+    }
+
+    private static final class State {
+        private final Deque<BigDecimal> window = new ArrayDeque<>();
+        private BigDecimal sum = BigDecimal.ZERO;
+    }
 }
 ```
 

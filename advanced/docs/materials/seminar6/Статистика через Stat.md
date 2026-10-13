@@ -53,9 +53,11 @@ public class TotalPriceStat implements Stat<BigDecimal> {
 `stat.getCode() + ": " + stat.calculateStats(quotes)` для каждого элемента.
 
 ```java
-// StatsCommand.call()
-for (Stat<?> stat : stats) {
-    System.out.println(stat.getCode() + ": " + stat.calculateStats(quotes));
+void example(List<Quote> quotes, List<Stat<?>> stats) {
+    // StatsCommand.call()
+    for (Stat<?> stat : stats) {
+        System.out.println(stat.getCode() + ": " + stat.calculateStats(quotes));
+    }
 }
 ```
 
