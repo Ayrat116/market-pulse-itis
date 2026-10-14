@@ -1,4 +1,4 @@
-package academy.backend.market_pulse.exercise;
+package academy.backend.market_pulse.demo;
 
 import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.model.Currency;
@@ -13,7 +13,7 @@ import java.util.Set;
  * Самостоятельная практика Stream API (семинар 6) — демо-формат, без JUnit (в этом репозитории нет
  * тестовой инфраструктуры): 16 упражнений над списком котировок, от базовых операций до Gatherer
  * API, от лёгких к сложным. У каждого метода — своя формулировка задачи в javadoc; сам
- * стрим-конвейер пишется в теле метода {@link StreamExercisesSkeleton} — вживую, на самом
+ * стрим-конвейер пишется в теле метода {@link StreamExercisesImpl} — вживую, на самом
  * семинаре.
  */
 public interface StreamExercises {

@@ -1,4 +1,4 @@
-package academy.backend.market_pulse.exercise;
+package academy.backend.market_pulse.demo;
 
 import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.model.Currency;
@@ -9,12 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Заготовка для самостоятельной практики (см. {@link StreamExercises}, семинар 6, демо-формат без
- * тестов). Каждый метод — один стрим-конвейер на замену {@code throw}; формулировка задачи — в
- * javadoc интерфейса.
- */
-public class StreamExercisesSkeleton implements StreamExercises {
+public class StreamExercisesImpl implements StreamExercises {
 
     @Override
     public List<String> tickersInCurrency(List<Quote> quotes, Currency currency) {
