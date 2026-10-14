@@ -26,11 +26,9 @@ public class MovingAveragePriceStat implements Stat<List<BigDecimal>> {
 
     @Override
     public List<BigDecimal> calculateStats(List<Quote> quotes) {
-        // NOTICE: MovingAverageGatherer.movingAverage(WINDOW_SIZE) — тот же класс, что уже
-        // использует history --sma. Переписывает NaiveMovingAveragePriceStat — подчеркнуть
-        // разницу вслух: один проход по стриму, без subList, без пересчёта среднего заново на
-        // каждое окно.
-        // TODO: gather(MovingAverageGatherer.movingAverage(WINDOW_SIZE))
-        throw new UnsupportedOperationException("MovingAveragePriceStat ещё не реализован");
+        return quotes.stream()
+                .map(Quote::getPrice)
+                .gather(MovingAverageGatherer.movingAverage(WINDOW_SIZE))
+                .toList();
     }
 }
