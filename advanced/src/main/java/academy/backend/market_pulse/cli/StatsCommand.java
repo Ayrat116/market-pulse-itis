@@ -1,10 +1,12 @@
 package academy.backend.market_pulse.cli;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.service.QuoteSource;
 import academy.backend.market_pulse.stat.Stat;
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -23,12 +25,17 @@ public class StatsCommand implements Callable<Integer> {
     private final QuoteSource source;
     private final List<Stat<?>> stats;
 
+    @Parameters(index = "0", description = "...")
+    private StatCode code;
+
     @Override
     public Integer call() {
         List<Quote> quotes = List.copyOf(source.all());
-        for (Stat<?> stat : stats) {
-            System.out.println(stat.getCode() + ": " + stat.calculateStats(quotes));
-        }
+        var stat = stats.stream()
+                .filter(it -> it.getCode() == code)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Статистика " + code + " не найдена"));
+        System.out.println(stat.getCode() + ": " + stat.calculateStats(quotes));
         return 0;
     }
 }
