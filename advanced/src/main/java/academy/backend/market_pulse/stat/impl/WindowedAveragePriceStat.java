@@ -10,8 +10,6 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Gatherers;
 
-// NOTICE: семинарист пишет этот класс вживую — встроенный Gatherer (Gatherers.windowSliding),
-// в паре со следующим (MovingAveragePriceStat — тот же результат через кастомный Gatherer).
 /**
  * Среднее цены по окнам из {@value #WINDOW_SIZE} подряд идущих котировок (в порядке списка) —
  * встроенный {@code Gatherers.windowSliding}, который сам собирает окна-списки; дальше остаётся
@@ -29,9 +27,9 @@ public class WindowedAveragePriceStat implements Stat<List<BigDecimal>> {
     public List<BigDecimal> calculateStats(List<Quote> quotes) {
         // NOTICE: Gatherers.windowSliding(WINDOW_SIZE) сам собирает окна-списки — дальше обычный
         // map считает среднее в каждом (reduce + divide, HALF_UP до 2 знаков). Сравнить с
-        // NaiveMovingAveragePriceStat (этап 3, то же без Gatherer) и с MovingAveragePriceStat
-        // (этап 5, кастомный Gatherer без материализации списков-окон).
-        // TODO: семинар 6, этап 5 — Gatherers.windowSliding + map
+        // NaiveMovingAveragePriceStat (то же без Gatherer) и с MovingAveragePriceStat (кастомный
+        // Gatherer без материализации списков-окон).
+        // TODO: Gatherers.windowSliding + map
         throw new UnsupportedOperationException("WindowedAveragePriceStat ещё не реализован");
     }
 }

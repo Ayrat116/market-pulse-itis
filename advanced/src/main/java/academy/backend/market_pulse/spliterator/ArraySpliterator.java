@@ -5,7 +5,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 /**
- * Простейший самописный {@link Spliterator} над {@link List} с произвольным доступом (семинар 6):
+ * Простейший самописный {@link Spliterator} над {@link List} с произвольным доступом:
  * хранит не сам список, а диапазон индексов {@code [from, to)} в нём — без копирования элементов.
  * Показывает контракт на минимальном примере, без претензии на универсальность (в отличие от
  * встроенного спилитератора {@code ArrayList}, не умеет {@code ORDERED}-перенастройку середины
@@ -36,7 +36,7 @@ public class ArraySpliterator<T> implements Spliterator<T> {
         // NOTICE: аналог hasNext()+next() итератора — если следующий элемент есть (from < to),
         // применить к нему action, сдвинуть from и вернуть true; если диапазон исчерпан —
         // false, без исключений.
-        // TODO: семинар 6, этап 4 — tryAdvance
+        // TODO: tryAdvance
         throw new UnsupportedOperationException("ArraySpliterator.tryAdvance ещё не реализован");
     }
 
@@ -51,7 +51,7 @@ public class ArraySpliterator<T> implements Spliterator<T> {
         // NOTICE: делит диапазон пополам; себе оставляет ВТОРУЮ половину (сдвигает свой from), в
         // новый Spliterator отдаёт ПЕРВУЮ (from исходный, to = splitPoint). null, если осталось
         // меньше двух элементов — делить дальше не имеет смысла.
-        // TODO: семинар 6, этап 4 — trySplit
+        // TODO: trySplit
         throw new UnsupportedOperationException("ArraySpliterator.trySplit ещё не реализован");
     }
 

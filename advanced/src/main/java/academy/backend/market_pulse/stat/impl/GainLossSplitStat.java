@@ -24,7 +24,7 @@ public class GainLossSplitStat implements Stat<Map<Boolean, Long>> {
     public Map<Boolean, Long> calculateStats(List<Quote> quotes) {
         // NOTICE: классификатор булев (changePercent > 0) — поэтому partitioningBy, а не
         // groupingBy; второй коллектор (counting) — тот же приём, что в CountByCurrencyStat.
-        // TODO: семинар 6, этап 3 — partitioningBy + counting
+        // TODO: partitioningBy + counting
         throw new UnsupportedOperationException("GainLossSplitStat ещё не реализован");
     }
 }

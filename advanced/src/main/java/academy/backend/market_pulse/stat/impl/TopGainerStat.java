@@ -19,7 +19,7 @@ public class TopGainerStat implements Stat<Optional<Quote>> {
     public Optional<Quote> calculateStats(List<Quote> quotes) {
         // NOTICE: max(Comparator) -> Optional<Quote>, а не Quote: пустой список — валидный случай,
         // не ошибка.
-        // TODO: семинар 6, этап 3 — max(Comparator)
+        // TODO: max(Comparator)
         throw new UnsupportedOperationException("TopGainerStat ещё не реализован");
     }
 }

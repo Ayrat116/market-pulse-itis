@@ -13,7 +13,7 @@ import java.util.Spliterator;
 import java.util.stream.StreamSupport;
 
 /**
- * Дефолтный {@code Spliterator} списка рядом с самописным {@link ArraySpliterator} (семинар 6).
+ * Дефолтный {@code Spliterator} списка рядом с самописным {@link ArraySpliterator}.
  * {@code StreamParallelBenchmark} и {@code ForEachVsStreamBenchmark} уже используют параллелизм
  * через встроенный спилитератор {@code ArrayList} неявно (внутри {@code parallelStream()}) — здесь
  * оба показаны явно, напрямую вызванными методами интерфейса.
@@ -32,8 +32,7 @@ public class SpliteratorDemo {
 
     /**
      * Встроенный {@code Spliterator} уже умеет сообщать размер и характеристики и однажды
-     * корректно делится — ArrayList делится дёшево и ровно пополам (см. материал «Spliterator и
-     * параллельные стримы»).
+     * корректно делится — {@code ArrayList} делится дёшево и ровно пополам.
      */
     private static void builtIn(List<Quote> quotes) {
         Spliterator<Quote> spliterator = quotes.spliterator();

@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 
 /**
  * Скользящее среднее и скользящий разброс (max - min) по истории цен инструмента через Gatherer
- * API (семинар 6: {@link MovingAverageGatherer}, {@link SlidingSpreadGatherer}). История цен —
+ * API ({@link MovingAverageGatherer}, {@link SlidingSpreadGatherer}). История цен —
  * заглушка-{@code Map} в {@code Main}, а не реальный источник.
  */
 @Command(name = "history", description = "Скользящее среднее и скользящий разброс по истории цен инструмента")

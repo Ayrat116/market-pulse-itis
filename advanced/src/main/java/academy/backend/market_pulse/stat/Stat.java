@@ -6,7 +6,7 @@ import academy.backend.market_pulse.model.Quote;
 import java.util.List;
 
 /**
- * Одна статистика по списку котировок — для команды {@code stats} (семинар 6).
+ * Одна статистика по списку котировок — для команды {@code stats}.
  *
  * <p>Та же идея расширяемости, что у {@code InstrumentFilter}: новый вид отбора добавлялся через
  * новый класс, реализующий {@code InstrumentFilter}, без изменения существующих. Здесь — то же

@@ -21,7 +21,7 @@ public class AverageChangeStat implements Stat<Double> {
     public Double calculateStats(List<Quote> quotes) {
         // NOTICE: mapToDouble + average — перевод BigDecimal в double теряет точность, но для
         // отображаемого процента это приемлемо (контраст с TotalPriceStat, где считаются деньги).
-        // TODO: семинар 6, этап 3 — mapToDouble + average
+        // TODO: mapToDouble + average
         throw new UnsupportedOperationException("AverageChangeStat ещё не реализован");
     }
 }

@@ -22,7 +22,7 @@ public class TotalPriceStat implements Stat<BigDecimal> {
     public BigDecimal calculateStats(List<Quote> quotes) {
         // NOTICE: reduce над BigDecimal, а не mapToDouble().sum() — это деньги, округление
         // double недопустимо.
-        // TODO: семинар 6, этап 3 — reduce
+        // TODO: reduce
         throw new UnsupportedOperationException("TotalPriceStat ещё не реализован");
     }
 }

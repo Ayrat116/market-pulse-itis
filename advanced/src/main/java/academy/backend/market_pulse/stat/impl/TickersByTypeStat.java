@@ -29,7 +29,7 @@ public class TickersByTypeStat implements Stat<Map<InstrumentType, String>> {
         // mapping(valueExtractor, joining(delimiter)). mapping сначала проецирует элемент группы
         // (котировку) в тикер, и только потом joining склеивает тикеры внутри группы — без
         // mapping joining пришлось бы отдать прямо на Quote, а Quote не CharSequence.
-        // TODO: семинар 6, этап 3 — groupingBy + mapping + joining
+        // TODO: groupingBy + mapping + joining
         throw new UnsupportedOperationException("TickersByTypeStat ещё не реализован");
     }
 }

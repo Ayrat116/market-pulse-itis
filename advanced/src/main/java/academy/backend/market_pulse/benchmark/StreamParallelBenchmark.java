@@ -24,13 +24,12 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Последовательная и параллельная агрегация одного и того же стрима (семинар 6, Spliterator и
- * Parallel Streams). Параметр {@code size} показывает границу, за которой имеет смысл
- * параллелизм: на малом {@code N} накладные на split/merge через {@code ForkJoinPool} (источник
- * параллелизма — {@code Spliterator} списка, делящийся через {@code trySplit}) превышают выигрыш,
- * и {@code parallelStream} проигрывает; выигрыш появляется только с ростом объёма (и стоимости
- * операции на элемент). Запускается через JMH-плагин IntelliJ IDEA либо
- * {@code org.openjdk.jmh.Main} из собранного jar.
+ * Последовательная и параллельная агрегация одного и того же стрима. Параметр {@code size}
+ * показывает границу, за которой имеет смысл параллелизм: на малом {@code N} накладные на
+ * split/merge через {@code ForkJoinPool} (источник параллелизма — {@code Spliterator} списка,
+ * делящийся через {@code trySplit}) превышают выигрыш, и {@code parallelStream} проигрывает;
+ * выигрыш появляется только с ростом объёма (и стоимости операции на элемент). Запускается через
+ * JMH-плагин IntelliJ IDEA либо {@code org.openjdk.jmh.Main} из собранного jar.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)

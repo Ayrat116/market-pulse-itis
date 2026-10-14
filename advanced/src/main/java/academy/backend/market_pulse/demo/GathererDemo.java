@@ -10,8 +10,8 @@ import java.util.function.Supplier;
 import java.util.stream.Gatherers;
 
 /**
- * Все встроенные фабрики {@code java.util.stream.Gatherers} рядом с кастомным {@code Gatherer}
- * (семинар 6, материал «Gatherer API»). {@code HistoryCommand} использует только
+ * Все встроенные фабрики {@code java.util.stream.Gatherers} рядом с кастомным {@code Gatherer}.
+ * {@code HistoryCommand} использует только
  * {@link MovingAverageGatherer} — этот демо-класс показывает, чем он отличается от штатной
  * альтернативы {@code windowSliding}, и разбирает ещё три встроенных фабрики, которых в реальном
  * коде проекта нет.
@@ -58,7 +58,7 @@ public class GathererDemo {
     /**
      * {@link MovingAverageGatherer} считает ровно тот же результат за один проход конвейера, без
      * промежуточного {@code map}: окно и сумма — внутреннее состояние {@code integrator}, среднее
-     * считается и испускается сразу, как только окно заполнено (см. материал «Gatherer API»).
+     * считается и испускается сразу, как только окно заполнено.
      */
     private static void customMovingAverage(List<BigDecimal> prices) {
         prices.stream()
@@ -93,8 +93,8 @@ public class GathererDemo {
     /**
      * {@code mapConcurrent(n, mapper)} — тот же {@code map}, но до {@code n} вызовов {@code mapper}
      * одновременно; полезно, когда {@code mapper} сам по себе медленный и блокирующий (поход в
-     * сеть), а не арифметика на CPU — ровно то, чем в будущем станет обращение к T-Invest API
-     * (семинар 7). Ниже — тот же вызов «медленного внешнего сервиса» обычным {@code map} и через
+     * сеть), а не арифметика на CPU — ровно то, чем в будущем станет обращение к внешнему
+     * T-Invest API. Ниже — тот же вызов «медленного внешнего сервиса» обычным {@code map} и через
      * {@code mapConcurrent(3)}: при пяти запросах по ~150 мс обычный {@code map} делает их строго
      * по одному (~750 мс), {@code mapConcurrent(3)} — до трёх одновременно (~300 мс).
      */
@@ -118,7 +118,7 @@ public class GathererDemo {
         return elapsedMs;
     }
 
-    /** Эмуляция похода в сеть — реального сервиса пока нет (придёт на семинаре 7). */
+    /** Эмуляция похода в сеть — реального сервиса пока нет. */
     private static String fetchFromSlowExternalService(String ticker) {
         try {
             Thread.sleep(150);
@@ -130,7 +130,7 @@ public class GathererDemo {
 
     /**
      * {@link SlidingSpreadGatherer} — разница между max и min в скользящем окне из 3 цен подряд.
-     * Та самая «реальная задача» из материала «Gatherer API»: ни {@code map}, ни {@code filter},
+     * Классическая «реальная задача» для Gatherer API: ни {@code map}, ни {@code filter},
      * ни {@code reduce} сами по себе не выразят «окно из последних N значений» — нужно состояние
      * между соседними элементами конвейера, то есть ровно то, для чего и нужен Gatherer API.
      */

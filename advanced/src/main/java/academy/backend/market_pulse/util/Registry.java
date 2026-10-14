@@ -27,8 +27,7 @@ public class Registry<K, V> {
      * анонимный подкласс — {@code new Registry<String, InstrumentFactory>(keyExtractor) {}} — тогда у
      * ЭТОГО конкретного подкласса {@code getClass().getGenericSuperclass()} возвращает
      * {@code ParameterizedType} с реальными аргументами {@code String}/{@code InstrumentFactory}: они
-     * часть сигнатуры сгенерированного класса, а не стираемого generic-вызова. Подробности — в
-     * материале «Generics: устройство».
+     * часть сигнатуры сгенерированного класса, а не стираемого generic-вызова.
      *
      * @throws IllegalStateException если {@code Registry} создан напрямую, без анонимного
      *                               подкласса, — тип {@code V} в этом случае восстановить нечем

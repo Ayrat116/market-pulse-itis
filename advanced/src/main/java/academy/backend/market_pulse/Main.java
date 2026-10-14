@@ -91,23 +91,17 @@ public class Main {
     }
 
     /**
-     * Статистики, которые печатает {@code stats} (семинар 6). Добавить новую — написать класс,
-     * реализующий {@link Stat}, в {@code stat.impl}, и дописать его сюда; сам {@code StatsCommand}
-     * не меняется — ровно тот же принцип, что у {@code InstrumentFilter}.
+     * Статистики, которые печатает {@code stats}. Добавить новую — написать класс, реализующий
+     * {@link Stat}, в {@code stat.impl}, и дописать его сюда; сам {@code StatsCommand} не
+     * меняется — ровно тот же принцип, что у {@code InstrumentFilter}.
      *
-     * <p>NOTICE для семинариста — порядок списка соответствует этапам занятия:
-     * <ul>
-     *     <li>первые семь — базовые статистики на дефолтных операциях стрима;
-     *     {@code NaiveMovingAveragePriceStat} — версия «в лоб» без Gatherer API, переписывается
-     *     ниже;</li>
-     *     <li>{@code ParallelAverageChangeStat} — многопоточные стримы, кастомный {@code Spliterator}
-     *     ({@code spliterator/ArraySpliterator.java});</li>
-     *     <li>последние две — Gatherer API: встроенный ({@code Gatherers.windowSliding}) и
-     *     кастомный ({@code gather/MovingAverageGatherer.java}) — {@code MovingAveragePriceStat}
-     *     переписывает {@code NaiveMovingAveragePriceStat} той же формулой, другим способом.</li>
-     * </ul>
-     * Всё перечисленное уже реализовано как эталон — вживую на занятии пишется заново тот же код,
-     * эталон остаётся под рукой для сверки.
+     * <p>Список сгруппирован по технике вычисления: сначала базовые статистики на дефолтных
+     * операциях стрима ({@code NaiveMovingAveragePriceStat} — версия «в лоб» без Gatherer API),
+     * затем {@code ParallelAverageChangeStat} — многопоточные стримы на кастомном
+     * {@code Spliterator} ({@code spliterator/ArraySpliterator.java}), и наконец Gatherer API:
+     * {@code WindowedAveragePriceStat} — встроенный ({@code Gatherers.windowSliding}),
+     * {@code MovingAveragePriceStat} — кастомный ({@code gather/MovingAverageGatherer.java}),
+     * переписывает {@code NaiveMovingAveragePriceStat} той же формулой, другим способом.
      */
     private static List<Stat<?>> stats() {
         return List.of(
@@ -125,7 +119,7 @@ public class Main {
 
     /**
      * Заглушка истории цен по тикерам — для команды {@code history} (скользящее среднее через
-     * Gatherer API, семинар 6). Отдельная {@code Map}, не часть {@code QuoteSource}: истории нет у
+     * Gatherer API). Отдельная {@code Map}, не часть {@code QuoteSource}: истории нет у
      * реального источника.
      */
     private static Map<String, List<BigDecimal>> samplePriceHistory() {

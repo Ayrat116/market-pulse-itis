@@ -10,8 +10,8 @@ import java.util.Comparator;
 import java.util.concurrent.Callable;
 
 /**
- * Топ инструментов по изменению цены — по умолчанию растущие, {@code --losers} — упавшие
- * (семинар 6): {@code sorted} по {@code changePercent} в нужную сторону + {@code limit}.
+ * Топ инструментов по изменению цены — по умолчанию растущие, {@code --losers} — упавшие:
+ * {@code sorted} по {@code changePercent} в нужную сторону + {@code limit}.
  */
 @Command(name = "movers", description = "Топ инструментов по изменению цены (по умолчанию — растущие)")
 @RequiredArgsConstructor

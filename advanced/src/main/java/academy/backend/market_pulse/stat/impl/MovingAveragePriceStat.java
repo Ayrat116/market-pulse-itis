@@ -9,8 +9,6 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.util.List;
 
-// NOTICE: семинарист пишет этот класс вживую — кастомный Gatherer (тот же MovingAverageGatherer,
-// что уже использует history TICKER --sma K), в паре с предыдущим (встроенный windowSliding).
 /**
  * Переписанный {@link NaiveMovingAveragePriceStat}: та же формула — скользящее среднее цены по
  * окнам из {@value #WINDOW_SIZE} — но через кастомный {@link MovingAverageGatherer}. Окно и сумма
@@ -29,10 +27,10 @@ public class MovingAveragePriceStat implements Stat<List<BigDecimal>> {
     @Override
     public List<BigDecimal> calculateStats(List<Quote> quotes) {
         // NOTICE: MovingAverageGatherer.movingAverage(WINDOW_SIZE) — тот же класс, что уже
-        // использует history --sma. Переписывает NaiveMovingAveragePriceStat (этап 3) — подчеркнуть
+        // использует history --sma. Переписывает NaiveMovingAveragePriceStat — подчеркнуть
         // разницу вслух: один проход по стриму, без subList, без пересчёта среднего заново на
         // каждое окно.
-        // TODO: семинар 6, этап 5 — gather(MovingAverageGatherer.movingAverage(WINDOW_SIZE))
+        // TODO: gather(MovingAverageGatherer.movingAverage(WINDOW_SIZE))
         throw new UnsupportedOperationException("MovingAveragePriceStat ещё не реализован");
     }
 }

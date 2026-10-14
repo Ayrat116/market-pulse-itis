@@ -38,7 +38,7 @@ public class NaiveMovingAveragePriceStat implements Stat<List<Double>> {
         // окна. Специально неоптимально (пересчёт на каждое окно заново) — контраст с
         // Gatherer-версией на этапе 5 (MovingAveragePriceStat). Не забыть проверку
         // prices.size() < WINDOW_SIZE — иначе отрицательный верхний предел rangeClosed.
-        // TODO: семинар 6, этап 3 — IntStream.rangeClosed + subList + Collectors.averagingDouble
+        // TODO: IntStream.rangeClosed + subList + Collectors.averagingDouble
         throw new UnsupportedOperationException("NaiveMovingAveragePriceStat ещё не реализован");
     }
 }

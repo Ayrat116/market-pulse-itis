@@ -9,8 +9,6 @@ import lombok.Getter;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
-// NOTICE: семинарист пишет этот класс вживую — демонстрация многопоточных стримов на
-// собственном Spliterator'е (см. ArraySpliterator), а не на встроенном parallelStream().
 /**
  * Та же средняя доходность, что {@link AverageChangeStat}, но стрим собирается вручную из
  * самописного {@link ArraySpliterator} через {@code StreamSupport.stream(spliterator, true)}, а не
@@ -30,7 +28,7 @@ public class ParallelAverageChangeStat implements Stat<Double> {
         // строится вручную над своим Spliterator'ом, а не через quotes.parallelStream(). Формула —
         // та же, что в AverageChangeStat: результат должен совпасть, разница только в источнике
         // деления работы между потоками ForkJoinPool.
-        // TODO: семинар 6, этап 4 — StreamSupport.stream(spliterator, true) + mapToDouble + average
+        // TODO: StreamSupport.stream(spliterator, true) + mapToDouble + average
         throw new UnsupportedOperationException("ParallelAverageChangeStat ещё не реализован");
     }
 }
