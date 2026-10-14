@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * ({@code sum / count}, округлённая до {@code double}, как в {@code AverageChangeStat}), три разных
  * способа обойти коллекцию — разница в результатах бенчмарка приписывается только способу обхода,
  * а не вычислению. Результаты и выводы — в материале
- * {@code docs/materials/seminar6/Результаты ForEachVsStreamBenchmark.md}.
+ * {@code docs/materials/seminar6/ForEachVsStreamBenchmark.md}.
  *
  * <p>Параметр {@code size} показывает, как разница между тремя способами меняется с ростом объёма:
  * на малых коллекциях конвейер стрима (и тем более параллельного — создание задач в
