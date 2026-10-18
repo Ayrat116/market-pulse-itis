@@ -1,5 +1,6 @@
 package academy.backend.market_pulse.cli;
 
+import lombok.RequiredArgsConstructor;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -17,6 +18,7 @@ import picocli.CommandLine.Parameters;
  * если в нём остались тикеры удалённых инструментов.
  */
 @Command(name = "remove", description = "Удалить инструмент(ы) из репозитория (делистинг)")
+@RequiredArgsConstructor
 public class RemoveCommand implements Callable<Integer> {
 
     @Parameters(index = "0", arity = "0..1", description = "Тикер инструмента")
@@ -27,11 +29,6 @@ public class RemoveCommand implements Callable<Integer> {
 
     private final InstrumentRepository repository;
     private final Watchlist watchlist;
-
-    public RemoveCommand(InstrumentRepository repository, Watchlist watchlist) {
-        this.repository = repository;
-        this.watchlist = watchlist;
-    }
 
     @Override
     public Integer call() {

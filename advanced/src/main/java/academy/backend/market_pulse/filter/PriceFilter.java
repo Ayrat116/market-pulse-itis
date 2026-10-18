@@ -3,6 +3,7 @@ package academy.backend.market_pulse.filter;
 import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.model.Stock;
 
+import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
 
 /**
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
  * роли цены — дивидендная доходность ({@link Stock#getDividendYield()}), единственный числовой
  * атрибут акции.
  */
+@RequiredArgsConstructor
 public class PriceFilter implements InstrumentFilter {
 
     public enum Operator {
@@ -19,11 +21,6 @@ public class PriceFilter implements InstrumentFilter {
 
     private final Operator operator;
     private final BigDecimal threshold;
-
-    public PriceFilter(Operator operator, BigDecimal threshold) {
-        this.operator = operator;
-        this.threshold = threshold;
-    }
 
     @Override
     public boolean matches(Instrument instrument) {
