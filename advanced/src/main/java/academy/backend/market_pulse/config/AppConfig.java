@@ -1,5 +1,7 @@
 package academy.backend.market_pulse.config;
 
+import academy.backend.market_pulse.client.TInvestApiClient;
+import academy.backend.market_pulse.client.TInvestClientMode;
 import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.factory.InstrumentFactories;
 import academy.backend.market_pulse.model.Currency;
@@ -42,6 +44,7 @@ public class AppConfig {
     private final QuoteService quoteService;
     private final List<Stat<?>> stats;
     private final Map<String, List<BigDecimal>> priceHistory;
+    private final TInvestApiClient apiClient;
 
     public AppConfig() {
         this.instrumentRepository = new InMemoryInstrumentRepository();
@@ -50,6 +53,20 @@ public class AppConfig {
         this.quoteService = new QuoteService(quoteSource);
         this.stats = stats();
         this.priceHistory = samplePriceHistory();
+
+        // Клиент к instruments-service (моковый сервер в Docker, см. docker/mockserver): настройки
+        // отдельным классом, клиент создаётся один раз здесь и дальше инжектится через конструктор.
+        // Реализацию выбирает переменная окружения MARKET_PULSE_CLIENT (URL_CONNECTION | REACTOR |
+        // HTTP_CLIENT, по умолчанию HTTP_CLIENT), сбой на стороне мока включает
+        // MARKET_PULSE_MOCK_SCENARIO (error | timeout | ok).
+        TInvestApiProperties properties = TInvestApiProperties.localMock()
+                .withMockScenario(System.getenv("MARKET_PULSE_MOCK_SCENARIO"));
+        this.apiClient = TInvestClientMode.createClient(clientMode(), properties);
+    }
+
+    private static TInvestClientMode clientMode() {
+        String mode = System.getenv("MARKET_PULSE_CLIENT");
+        return mode == null || mode.isBlank() ? TInvestClientMode.HTTP_CLIENT : TInvestClientMode.valueOf(mode.trim());
     }
 
     /**

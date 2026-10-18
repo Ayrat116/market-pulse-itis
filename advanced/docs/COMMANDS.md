@@ -199,7 +199,7 @@ FXUS: 6.85 USD ▲ 0.90%
 ## history
 
 Семинар 6. Скользящее среднее по истории цен инструмента — через Gatherer API (`MovingAverageGatherer`). История
-цен — заглушка-`Map` в `Main.samplePriceHistory()`, есть только для `SBER` и `LKOH`.
+цен — заглушка-`Map` в `AppConfig.samplePriceHistory()`, есть только для `SBER` и `LKOH`.
 
 ```
 history <TICKER> [--sma K]
@@ -212,4 +212,31 @@ history SBER --sma 3
 ```
 Цены: [244.00, 246.50, 245.00, 248.00, 250.00, 249.50, 251.20]
 SMA(3): [245.17, 246.50, 247.67, 249.17, 250.23]
+```
+
+## update
+
+Семинар 7. Забирает актуальные котировки у `instruments-service` через `TInvestApiClient` и печатает их. Работает
+против мокового сервера в Docker (`docker/mockserver`, порт 1080) — поднять заранее:
+
+```bash
+docker compose -f docker/mockserver/docker-compose.yml up -d
+```
+
+```
+update
+```
+
+Реализацию клиента выбирает переменная окружения `MARKET_PULSE_CLIENT`: `URL_CONNECTION` (блокирующий
+`HttpURLConnection`), `REACTOR` (самописный на `Selector`) или `HTTP_CLIENT` (по умолчанию, готовый `HttpClient`).
+Сбой на стороне мока включает `MARKET_PULSE_MOCK_SCENARIO=error|timeout`.
+
+```bash
+MARKET_PULSE_CLIENT=URL_CONNECTION update
+```
+
+```
+SBER: 250.00 RUB ▲ 1.20%
+GAZP: 120.50 RUB ▼ 0.80%
+Получено котировок: 2
 ```
