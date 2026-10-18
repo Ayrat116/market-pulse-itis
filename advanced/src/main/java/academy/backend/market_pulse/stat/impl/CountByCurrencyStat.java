@@ -6,6 +6,7 @@ import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.stat.Stat;
 import lombok.Getter;
 
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,9 +19,9 @@ public class CountByCurrencyStat implements Stat<Map<Currency, Long>> {
 
     @Override
     public Map<Currency, Long> calculateStats(List<Quote> quotes) {
-        // NOTICE: простой groupingBy + counting — опорная точка перед более сложными collect'ами
-        // (TickersByTypeStat, GainLossSplitStat).
-        // TODO: groupingBy + counting
-        throw new UnsupportedOperationException("CountByCurrencyStat ещё не реализован");
+        return quotes.stream().collect(Collectors.groupingBy(
+                quote -> quote.getInstrument().getCurrency(),
+                () -> new EnumMap<>(Currency.class),
+                Collectors.counting()));
     }
 }

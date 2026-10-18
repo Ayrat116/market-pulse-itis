@@ -20,9 +20,8 @@ public class TotalPriceStat implements Stat<BigDecimal> {
 
     @Override
     public BigDecimal calculateStats(List<Quote> quotes) {
-        // NOTICE: reduce над BigDecimal, а не mapToDouble().sum() — это деньги, округление
-        // double недопустимо.
-        // TODO: reduce
-        throw new UnsupportedOperationException("TotalPriceStat ещё не реализован");
+        return quotes.stream()
+                .map(Quote::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

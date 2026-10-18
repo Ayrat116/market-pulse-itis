@@ -32,13 +32,13 @@ public class NaiveMovingAveragePriceStat implements Stat<List<Double>> {
 
     @Override
     public List<Double> calculateStats(List<Quote> quotes) {
-        // NOTICE: нет встроенной операции "окно из N элементов" — IntStream.rangeClosed(0,
-        // size - windowSize) перебирает НАЧАЛЬНЫЕ ИНДЕКСЫ окон, subList(start, start+windowSize) —
-        // само окно (обычный метод List, не стрим-операция), Collectors.averagingDouble — среднее
-        // окна. Специально неоптимально (пересчёт на каждое окно заново) — контраст с
-        // Gatherer-версией на этапе 5 (MovingAveragePriceStat). Не забыть проверку
-        // prices.size() < WINDOW_SIZE — иначе отрицательный верхний предел rangeClosed.
-        // TODO: IntStream.rangeClosed + subList + Collectors.averagingDouble
-        throw new UnsupportedOperationException("NaiveMovingAveragePriceStat ещё не реализован");
+        List<BigDecimal> prices = quotes.stream().map(Quote::getPrice).toList();
+        if (prices.size() < WINDOW_SIZE) {
+            return List.of();
+        }
+        return IntStream.rangeClosed(0, prices.size() - WINDOW_SIZE)
+                .mapToObj(start -> prices.subList(start, start + WINDOW_SIZE).stream()
+                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue)))
+                .toList();
     }
 }

@@ -24,11 +24,9 @@ public class ParallelAverageChangeStat implements Stat<Double> {
 
     @Override
     public Double calculateStats(List<Quote> quotes) {
-        // NOTICE: StreamSupport.stream(new ArraySpliterator<>(quotes), true) — параллельный стрим
-        // строится вручную над своим Spliterator'ом, а не через quotes.parallelStream(). Формула —
-        // та же, что в AverageChangeStat: результат должен совпасть, разница только в источнике
-        // деления работы между потоками ForkJoinPool.
-        // TODO: StreamSupport.stream(spliterator, true) + mapToDouble + average
-        throw new UnsupportedOperationException("ParallelAverageChangeStat ещё не реализован");
+        return StreamSupport.stream(new ArraySpliterator<>(quotes), true)
+                .mapToDouble(quote -> quote.getChangePercent().doubleValue())
+                .average()
+                .orElse(0.0);
     }
 }
