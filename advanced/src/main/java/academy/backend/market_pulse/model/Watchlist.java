@@ -12,7 +12,7 @@ import java.util.Set;
  * ли» обеспечиваются {@link LinkedHashSet}: O(1) на add/contains, порядок добавления сохраняется.
  * Тикеры нормализуются к верхнему регистру.
  */
-// NOTICE: акцент при показе — LinkedHashSet вместо HashSet/TreeSet по тем же причинам, что и
+// NOTICE: LinkedHashSet вместо HashSet/TreeSet по тем же причинам, что и
 // LinkedHashMap в репозитории: нужен порядок добавления, а не хеш-порядок или сортировка.
 public class Watchlist {
 
@@ -39,8 +39,8 @@ public class Watchlist {
      * {@code tickers.remove(ticker)} внутри for-each уронил бы {@code ConcurrentModificationException}.
      * Возвращает удалённые тикеры.
      */
-    // NOTICE: ключевой пример fail-fast — показать, что for-each с tickers.remove() внутри
-    // падает с ConcurrentModificationException, а Iterator.remove() — безопасная альтернатива.
+    // NOTICE: ключевой пример fail-fast — for-each с tickers.remove() внутри падает с
+    // ConcurrentModificationException, а Iterator.remove() — безопасная альтернатива.
     public Set<String> prune(InstrumentRepository repository) {
         Set<String> removed = new LinkedHashSet<>();
         Iterator<String> it = tickers.iterator();
