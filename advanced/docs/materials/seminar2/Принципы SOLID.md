@@ -234,4 +234,4 @@ DIP связывает эту картину с полиморфизмом на 
 - [Martin Fowler — Inversion of Control Containers and the Dependency Injection pattern](https://martinfowler.com/articles/injection.html) —
   разбор DIP и его автоматизации фреймворками.
 - [Oracle — ServiceLoader (java.util)](https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ServiceLoader.html) —
-  официальная документация механизма, снимающего необходимость в ручном реестре (Factory Method в этом семинаре).
+  официальная документация механизма, снимающего необходимость в ручном реестре (Factory Method в этом проекте).

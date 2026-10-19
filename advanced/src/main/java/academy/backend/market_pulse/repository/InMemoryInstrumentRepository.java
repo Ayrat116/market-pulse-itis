@@ -22,7 +22,7 @@ import java.util.function.Predicate;
  * {@code LinkedHashMap}, а не {@code HashMap} — ради сохранения порядка добавления в выводе
  * {@code list}.
  */
-// NOTICE: акцент при показе — почему именно LinkedHashMap, а не HashMap/TreeMap. HashMap дал бы
+// NOTICE: почему именно LinkedHashMap, а не HashMap/TreeMap. HashMap дал бы
 // O(1), но порядок list() стал бы недетерминированным; TreeMap дал бы сортировку по тикеру, но
 // добавил бы log(n) и сломал бы порядок "как добавляли".
 public class InMemoryInstrumentRepository implements InstrumentRepository {
