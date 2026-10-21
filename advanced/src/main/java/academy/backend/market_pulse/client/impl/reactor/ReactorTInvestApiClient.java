@@ -43,7 +43,7 @@ public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable 
         byte[] request = RawHttpProtocol.buildGetRequest(
                 address.getHostName(), address.getPort(),
                 "/v1/instruments", mockScenario);
-        throw new UnsupportedOperationException();
+        return eventLoop.submit(address, request);
     }
 
     private List<Quote> parseQuotes(byte[] rawResponse) {
@@ -56,6 +56,6 @@ public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable 
 
     @Override
     public void close() {
-        throw new UnsupportedOperationException();
+
     }
 }
