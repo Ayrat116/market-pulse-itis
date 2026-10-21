@@ -6,7 +6,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import academy.backend.market_pulse.client.InstrumentQuoteMapper;
 import academy.backend.market_pulse.client.TInvestApiClient;
@@ -16,10 +15,12 @@ import academy.backend.market_pulse.model.Quote;
 
 /**
  * Реализация {@link TInvestApiClient} на {@link HttpClient} из JDK 11+ — показывается после
- * Reactor: всё, что мы только что писали руками, здесь уже готово. Под капотом у {@link HttpClient} — свой событийный цикл на {@code Selector}, поэтому
- * {@link #fetchQuotesAsync()} ({@code sendAsync}) не занимает по потоку на запрос, а {@link #fetchQuotes()}
- * ({@code send}) — удобная блокирующая обёртка для вызывающего потока. {@link HttpClient}
- * создаётся один раз в конструкторе и переиспользуется.
+ * Reactor: всё, что мы только что писали руками, здесь уже готово (свой событийный цикл на
+ * {@code Selector}, пул соединений). {@link #fetchQuotes()} ({@code send}) блокирует вызывающий
+ * поток до ответа. {@link HttpClient} создаётся один раз в конструкторе и переиспользуется.
+ *
+ * <p>NOTICE: у {@link HttpClient} есть и асинхронный интерфейс ({@code sendAsync}) — запрос не
+ * блокирует вызывающий поток, результат приходит «потом». К нему вернёмся в теме многопоточности.
  */
 public class HttpClientTInvestApiClient implements TInvestApiClient {
 
@@ -35,7 +36,7 @@ public class HttpClientTInvestApiClient implements TInvestApiClient {
 
     // NOTICE: HttpClient создаётся один раз и переиспользуется — внутри у него пул соединений и собственный
     //  цикл событий на Selector; создавать клиент на каждый запрос значит терять всё это.
-    /** Синхронный путь: {@code send} блокирует вызывающий поток до ответа. */
+    /** {@code send} блокирует вызывающий поток до ответа. */
     @Override
     public List<Quote> fetchQuotes() {
         HttpResponse<String> response;
@@ -48,12 +49,6 @@ public class HttpClientTInvestApiClient implements TInvestApiClient {
             throw new TInvestApiException("Запрос к instruments-service прерван", e);
         }
         return toQuotes(response);
-    }
-
-    /** Асинхронный путь: {@code sendAsync} возвращает управление сразу, результат придёт в future. */
-    public CompletableFuture<List<Quote>> fetchQuotesAsync() {
-        return httpClient.sendAsync(buildRequest(), HttpResponse.BodyHandlers.ofString())
-                .thenApply(this::toQuotes);
     }
 
     private HttpRequest buildRequest() {
