@@ -3,25 +3,30 @@ package academy.backend.market_pulse.client.impl.reactor;
 import java.io.IOException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.util.List;
 
 /**
- * Цикл событий — «сердце» реактора: один поток на все соединения. Ждёт у {@link Demultiplexer},
- * получает готовые ключи и раздаёт каждый своему {@link Handler}.
+ * Цикл событий — «сердце» реактора: один поток на все соединения. Сам создаёт свой
+ * {@link Demultiplexer}, ждёт у него, получает готовые ключи и раздаёт каждый своему {@link Handler}.
  *
  * <p>NOTICE: наследование от {@link Thread} — упрощение для наглядности (цикл «и есть» поток). В
  * промышленном коде цикл получает поток от исполнителя, а не наследуется от него.
  */
 public final class EventLoop extends Thread {
 
-    private final Demultiplexer demultiplexer;
+    private final Demultiplexer demultiplexer = new Demultiplexer();
     private volatile boolean running = true;
 
-    public EventLoop(Demultiplexer demultiplexer) {
+    public EventLoop() {
         super("reactor-event-loop");
-        this.demultiplexer = demultiplexer;
         setDaemon(true);
+    }
+
+    /** Ставит канал под наблюдение цикла; можно вызывать из любого потока. */
+    public void register(SelectableChannel channel, int ops, Handler handler) {
+        demultiplexer.register(channel, ops, handler);
     }
 
     @Override

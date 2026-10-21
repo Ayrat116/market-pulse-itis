@@ -14,9 +14,9 @@ import academy.backend.market_pulse.exception.TInvestApiException;
 import academy.backend.market_pulse.model.Quote;
 
 /**
- * Реакторная реализация {@link TInvestApiClient}: каркас, который собирает компоненты шаблона —
- * {@link Demultiplexer}, {@link EventLoop} и обработчики ({@link ConnectHandler},
- * {@link WriteHandler}, {@link ReadHandler}). Вызывающий поток блокируется на ответе
+ * Реакторная реализация {@link TInvestApiClient}: каркас вокруг {@link EventLoop} (он сам владеет
+ * {@link Demultiplexer}) и обработчиков ({@link ConnectHandler}, {@link WriteHandler},
+ * {@link ReadHandler}). Вызывающий поток блокируется на ответе
  * ({@link Exchange#await()}), но пока он ждёт, один поток цикла обслуживает сразу все запросы.
  *
  * <p>Выгода видна на {@link #fetchQuotesBatch(int)}: запросы уходят подряд, не дожидаясь друг друга,
@@ -25,8 +25,7 @@ import academy.backend.market_pulse.model.Quote;
  */
 public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable {
 
-    private final Demultiplexer demultiplexer = new Demultiplexer();
-    private final EventLoop eventLoop = new EventLoop(demultiplexer);
+    private final EventLoop eventLoop = new EventLoop();
     private final InetSocketAddress address;
     private final String mockScenario;
 
@@ -58,7 +57,7 @@ public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable 
     }
 
     /**
-     * Не блокирует: открывает канал, начинает подключение и отдаёт его под наблюдение демультиплексору.
+     * Не блокирует: открывает канал, начинает подключение и отдаёт его под наблюдение циклу событий.
      * Дальше запрос ведут обработчики в потоке цикла.
      */
     private Exchange submit() {
@@ -71,7 +70,7 @@ public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable 
             channel.configureBlocking(false);
             channel.connect(address);
             Exchange exchange = new Exchange(channel, request);
-            demultiplexer.register(channel, SelectionKey.OP_CONNECT, new ConnectHandler(exchange));
+            eventLoop.register(channel, SelectionKey.OP_CONNECT, new ConnectHandler(exchange));
             return exchange;
         } catch (IOException e) {
             throw new TInvestApiException("Не удалось открыть соединение с instruments-service", e);
