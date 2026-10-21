@@ -24,6 +24,7 @@ import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 import academy.backend.market_pulse.config.TInvestApiProperties;
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.exception.TInvestApiException;
 import academy.backend.market_pulse.model.Quote;
 
@@ -74,7 +75,7 @@ class ReactorTInvestApiClientWireMockTest {
 
         assertThat(quotes)
                 .extracting(q -> q.getInstrument().getTicker(), q -> q.getInstrument().getType())
-                .containsExactly(tuple("SBER", "STOCK"), tuple("FXUS", "ETF"));
+                .containsExactly(tuple("SBER", InstrumentType.STOCK), tuple("FXUS", InstrumentType.ETF));
     }
 
     @Test
