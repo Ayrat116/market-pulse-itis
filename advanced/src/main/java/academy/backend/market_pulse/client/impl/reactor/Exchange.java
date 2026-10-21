@@ -1,11 +1,11 @@
 package academy.backend.market_pulse.client.impl.reactor;
 
+import academy.backend.market_pulse.exception.TInvestApiException;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.atomic.AtomicReference;
-
-import academy.backend.market_pulse.exception.TInvestApiException;
 
 final class Exchange {
 
@@ -37,7 +37,8 @@ final class Exchange {
             Thread.onSpinWait();
         }
         if (result.failure() != null) {
-            throw new TInvestApiException("Не удалось выполнить реакторный запрос к instruments-service",
+            throw new TInvestApiException(
+                    "Не удалось выполнить реакторный запрос к instruments-service",
                     result.failure());
         }
         return result.response();
