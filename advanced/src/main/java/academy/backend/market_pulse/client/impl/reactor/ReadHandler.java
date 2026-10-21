@@ -22,7 +22,8 @@ final class ReadHandler extends ExchangeHandler {
         // ограниченный буфер за раз и не должен «застрять» на быстром отправителе, иначе остальные
         // соединения будут ждать.
         // -1 означает, что сервер закрыл соединение (Connection: close), то есть ответ получен целиком:
-        // закрыть канал и вызвать exchange.complete().
+        // закрыть канал и вызвать exchange.complete(). Канал не возвращается в пул и не переиспользуется
+        // — на следующий запрос будет новое соединение.
         // TODO: цикл read(buffer) -> flip -> копим в responseBuffer -> clear; на -1 — close + complete
         throw new UnsupportedOperationException("ReadHandler.handle ещё не реализован");
     }

@@ -63,6 +63,11 @@ public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable 
     private Exchange submit() {
         // NOTICE: канал неблокирующий — connect() вернётся сразу, рукопожатие пойдёт в фоне; OP_CONNECT
         // сообщит о его завершении. Первое состояние запроса — ConnectHandler.
+        // NOTICE: сокеты не пулируем: на каждый запрос открывается новый канал (новое TCP-рукопожатие),
+        // а после ответа он закрывается (Connection: close). Общие для всех запросов — только поток цикла и
+        // селектор. Пул соединений (keep-alive) потребовал бы разбирать Content-Length/chunked, чтобы
+        // знать, где кончается ответ, не дожидаясь закрытия соединения, а также таймауты простоя и
+        // проверку живости — всё это есть в HttpClient, но не в нашей учебной реализации.
         byte[] request = RawHttpProtocol.buildGetRequest(
                 address.getHostName(), address.getPort(), "/v1/instruments", mockScenario);
         try {
