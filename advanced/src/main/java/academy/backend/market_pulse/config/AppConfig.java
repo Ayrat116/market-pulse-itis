@@ -1,14 +1,17 @@
 package academy.backend.market_pulse.config;
 
-import java.math.BigDecimal;
-import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import academy.backend.market_pulse.history.impl.PriceHistoryStoreSkeleton;
-import academy.backend.market_pulse.repository.store.impl.QuoteFileStoreSkeleton;
-import academy.backend.market_pulse.repository.store.impl.WatchlistStoreSkeleton;
+import academy.backend.market_pulse.client.TInvestApiClient;
+import academy.backend.market_pulse.client.TInvestClientMode;
+import academy.backend.market_pulse.dictionary.InstrumentType;
+import academy.backend.market_pulse.factory.InstrumentFactories;
+import academy.backend.market_pulse.model.Currency;
+import academy.backend.market_pulse.model.Instrument;
+import academy.backend.market_pulse.model.Quote;
+import academy.backend.market_pulse.model.Watchlist;
+import academy.backend.market_pulse.repository.InMemoryInstrumentRepository;
+import academy.backend.market_pulse.repository.InstrumentRepository;
+import academy.backend.market_pulse.service.QuoteService;
+import academy.backend.market_pulse.service.QuoteSource;
 import academy.backend.market_pulse.stat.Stat;
 import academy.backend.market_pulse.stat.impl.AverageChangeStat;
 import academy.backend.market_pulse.stat.impl.CountByCurrencyStat;
@@ -22,22 +25,10 @@ import academy.backend.market_pulse.stat.impl.TotalPriceStat;
 import academy.backend.market_pulse.stat.impl.WindowedAveragePriceStat;
 import lombok.Getter;
 
-import academy.backend.market_pulse.client.TInvestApiClient;
-import academy.backend.market_pulse.client.impl.HttpClientTInvestApiClient;
-import academy.backend.market_pulse.factory.InstrumentFactories;
-import academy.backend.market_pulse.history.PriceHistoryStore;
-import academy.backend.market_pulse.model.Currency;
-import academy.backend.market_pulse.model.Instrument;
-import academy.backend.market_pulse.model.Quote;
-import academy.backend.market_pulse.model.Watchlist;
-import academy.backend.market_pulse.repository.FileBackedQuoteRepository;
-import academy.backend.market_pulse.repository.InMemoryInstrumentRepository;
-import academy.backend.market_pulse.repository.InstrumentRepository;
-import academy.backend.market_pulse.repository.QuoteFileWatcher;
-import academy.backend.market_pulse.repository.store.QuoteFileStore;
-import academy.backend.market_pulse.repository.store.WatchlistStore;
-import academy.backend.market_pulse.service.QuoteService;
-import academy.backend.market_pulse.service.QuoteSource;
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Композиционный корень приложения: единственное место, где создаются все зависимости, и каждая —
@@ -48,74 +39,48 @@ import academy.backend.market_pulse.service.QuoteSource;
 public class AppConfig {
 
     private final InstrumentRepository instrumentRepository;
+    private final Watchlist watchlist;
     private final QuoteSource quoteSource;
     private final QuoteService quoteService;
-
-    private final WatchlistStore watchlistStore;
-    private final Path watchlistPath;
-    private final Watchlist watchlist;
-
-    private final TInvestApiClient apiClient;
-
-    private final QuoteFileStore quoteFileStore;
-    private final FileBackedQuoteRepository fileBackedQuoteRepository;
-
-    private final PriceHistoryStore priceHistoryStore;
-    private final Path historyDirectory;
-
+    private final List<Stat<?>> stats;
     private final Map<String, List<BigDecimal>> priceHistory;
+    private final TInvestApiClient apiClient;
 
     public AppConfig() {
         this.instrumentRepository = new InMemoryInstrumentRepository();
-        this.quoteSource = new QuoteSource(sampleQuotes(instrumentRepository));
+        this.watchlist = new Watchlist();
+        this.quoteSource = new QuoteSource(sampleQuotes());
         this.quoteService = new QuoteService(quoteSource);
+        this.stats = stats();
+        this.priceHistory = samplePriceHistory();
 
-        // Watchlist переживает перезапуск CLI — читается при старте, дописывается на диск сразу
-        // при изменении (см. WatchCommand).
-        this.watchlistStore = new WatchlistStoreSkeleton();
-        this.watchlistPath = Path.of("data", "watchlist.json");
-        this.watchlist = new Watchlist(watchlistStore.load(watchlistPath));
-
-        // Семинар 7: клиент к instruments-service (моковый сервер в Docker, см.
-        // docker/mockserver) — настройки отдельным классом, клиент создаётся один раз здесь и
-        // дальше инжектится через конструктор.
-        // Переменная окружения MARKET_PULSE_MOCK_SCENARIO (error | timeout | ok) включает сбой на
-        // стороне мокового сервера: MARKET_PULSE_MOCK_SCENARIO=error java ... update
+        // Клиент к instruments-service (моковый сервер в Docker, см. docker/mockserver): настройки
+        // отдельным классом, клиент создаётся один раз здесь и дальше инжектится через конструктор.
+        // Реализацию выбирает переменная окружения MARKET_PULSE_CLIENT (URL_CONNECTION | REACTOR |
+        // HTTP_CLIENT, по умолчанию HTTP_CLIENT), сбой на стороне мока включает
+        // MARKET_PULSE_MOCK_SCENARIO (error | timeout | ok).
         TInvestApiProperties properties = TInvestApiProperties.localMock()
                 .withMockScenario(System.getenv("MARKET_PULSE_MOCK_SCENARIO"));
-        this.apiClient = new HttpClientTInvestApiClient(properties);
+        this.apiClient = TInvestClientMode.createClient(clientMode(), properties);
+    }
 
-        // Самостоятельная работа (см. «Требования к файловому хранилищу.md»): котировки
-        // отслеживаемых инструментов — на диске, а не только в памяти процесса.
-        // QuoteFileStoreReference — эталон для сверки в начале семинара 8.
-        this.quoteFileStore = new QuoteFileStoreSkeleton();
-        this.fileBackedQuoteRepository =
-                new FileBackedQuoteRepository(quoteFileStore, Path.of("data", "quotes.json"));
-        new QuoteFileWatcher(fileBackedQuoteRepository).start();
-
-        // История цен — для будущей статистики: новая точка (новый файл) на каждое update.
-        this.priceHistoryStore = new PriceHistoryStoreSkeleton();
-        this.historyDirectory = Path.of("data", "history");
-
-        this.priceHistory = samplePriceHistory();
+    private static TInvestClientMode clientMode() {
+        String mode = System.getenv("MARKET_PULSE_CLIENT");
+        return mode == null || mode.isBlank() ? TInvestClientMode.HTTP_CLIENT : TInvestClientMode.valueOf(mode.trim());
     }
 
     /**
-     * Заглушка каталога и котировок: репозиторий уже содержит базовый набор (засеян в конструкторе
-     * {@code InMemoryInstrumentRepository}), здесь добавляются остальные инструменты и по каждому
-     * строится котировка. Возвращает котировки для {@link QuoteSource}.
+     * Заглушка внешнего источника котировок — заранее заготовленные данные вместо реального
+     * сетевого запроса. Инструменты здесь — отдельные объекты, не из {@code repository}: источник
+     * котировок и каталог инструментов — независимые системы, как и в реальности.
      */
-    private static Map<String, Quote> sampleQuotes(InstrumentRepository repository) {
-        Instrument sber = repository.findByTicker("SBER").orElseThrow();
-        Instrument ofz = repository.findByTicker("OFZ26233").orElseThrow();
-        Instrument fxus = repository.findByTicker("FXUS").orElseThrow();
-
-        Instrument gazp = InstrumentFactories.create("STOCK", "GAZP", "Газпром", Currency.RUB);
-        Instrument lkoh = InstrumentFactories.create("STOCK", "LKOH", "Лукойл", Currency.RUB);
-        Instrument aapl = InstrumentFactories.create("STOCK", "AAPL", "Apple", Currency.USD);
-        repository.add(gazp);
-        repository.add(lkoh);
-        repository.add(aapl);
+    private static Map<String, Quote> sampleQuotes() {
+        Instrument sber = InstrumentFactories.create(InstrumentType.STOCK, "SBER", "Сбербанк", Currency.RUB);
+        Instrument gazp = InstrumentFactories.create(InstrumentType.STOCK, "GAZP", "Газпром", Currency.RUB);
+        Instrument lkoh = InstrumentFactories.create(InstrumentType.STOCK, "LKOH", "Лукойл", Currency.RUB);
+        Instrument aapl = InstrumentFactories.create(InstrumentType.STOCK, "AAPL", "Apple", Currency.USD);
+        Instrument ofz = InstrumentFactories.create(InstrumentType.BOND, "OFZ26233", "ОФЗ 26233", Currency.RUB);
+        Instrument fxus = InstrumentFactories.create(InstrumentType.ETF, "FXUS", "FinEx FXUS", Currency.USD);
 
         Map<String, Quote> quotes = new LinkedHashMap<>();
         quotes.put("SBER", new Quote(sber, new BigDecimal("250.00"), new BigDecimal("1.20")));
@@ -128,9 +93,36 @@ public class AppConfig {
     }
 
     /**
+     * Статистики, которые печатает {@code stats}. Добавить новую — написать класс, реализующий
+     * {@link Stat}, в {@code stat.impl}, и дописать его сюда; сам {@code StatsCommand} не
+     * меняется — ровно тот же принцип, что у {@code InstrumentFilter}.
+     *
+     * <p>Список сгруппирован по технике вычисления: сначала базовые статистики на дефолтных
+     * операциях стрима ({@code NaiveMovingAveragePriceStat} — версия «в лоб» без Gatherer API),
+     * затем {@code ParallelAverageChangeStat} — многопоточные стримы на кастомном
+     * {@code Spliterator} ({@code spliterator/ArraySpliterator.java}), и наконец Gatherer API:
+     * {@code WindowedAveragePriceStat} — встроенный ({@code Gatherers.windowSliding}),
+     * {@code MovingAveragePriceStat} — кастомный ({@code gather/MovingAverageGatherer.java}),
+     * переписывает {@code NaiveMovingAveragePriceStat} той же формулой, другим способом.
+     */
+    private static List<Stat<?>> stats() {
+        return List.of(
+                new TickersByTypeStat(),
+                new CountByCurrencyStat(),
+                new AverageChangeStat(),
+                new TotalPriceStat(),
+                new GainLossSplitStat(),
+                new TopGainerStat(),
+                new NaiveMovingAveragePriceStat(),
+                new ParallelAverageChangeStat(),
+                new WindowedAveragePriceStat(),
+                new MovingAveragePriceStat());
+    }
+
+    /**
      * Заглушка истории цен по тикерам — для команды {@code history} (скользящее среднее через
-     * Gatherer API). Отдельная {@code Map}, не часть {@code QuoteSource}: истории нет у реального
-     * источника.
+     * Gatherer API). Отдельная {@code Map}, не часть {@code QuoteSource}: истории нет у
+     * реального источника.
      */
     private static Map<String, List<BigDecimal>> samplePriceHistory() {
         Map<String, List<BigDecimal>> history = new LinkedHashMap<>();
@@ -143,28 +135,4 @@ public class AppConfig {
                 new BigDecimal("7080.00"), new BigDecimal("7100.00"), new BigDecimal("7150.00")));
         return history;
     }
-
-    /**
-     * Статистики, которые печатает {@code stats} (семинар 6). Добавить новую — написать класс,
-     * реализующий {@code Stat}, в {@code stat.impl}, и дописать его сюда; сам {@code StatsCommand}
-     * не меняется — ровно тот же принцип, что у {@code InstrumentFilter}.
-     */
-    public List<Stat<?>> getStats() {
-        return List.of(
-                // Этап 3 — базовые статистики на дефолтных операциях стрима:
-                new TickersByTypeStat(),
-                new CountByCurrencyStat(),
-                new AverageChangeStat(),
-                new TotalPriceStat(),
-                new GainLossSplitStat(),
-                new TopGainerStat(),
-                new NaiveMovingAveragePriceStat(),
-                // Этап 4 — многопоточные стримы, кастомный Spliterator:
-                new ParallelAverageChangeStat(),
-                // Этап 5 — Gatherer API (встроенный и кастомный; MovingAveragePriceStat —
-                // переписанный NaiveMovingAveragePriceStat выше):
-                new WindowedAveragePriceStat(),
-                new MovingAveragePriceStat());
-    }
-
 }

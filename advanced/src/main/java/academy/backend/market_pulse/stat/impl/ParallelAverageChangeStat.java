@@ -1,9 +1,10 @@
 package academy.backend.market_pulse.stat.impl;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.spliterator.ArraySpliterator;
 import academy.backend.market_pulse.stat.Stat;
-import academy.backend.market_pulse.stat.StatCode;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.stream.StreamSupport;
@@ -14,14 +15,12 @@ import java.util.stream.StreamSupport;
  * из {@code quotes.parallelStream()} — показывает, что параллельный стрим можно построить над
  * произвольным {@code Spliterator}, не только над {@code Collection}. Результат совпадает с
  * {@link AverageChangeStat} — разница только в источнике деления работы между потоками
- * {@code ForkJoinPool} (см. материал «Spliterator и параллельные стримы»).
+ * {@code ForkJoinPool}.
  */
 public class ParallelAverageChangeStat implements Stat<Double> {
 
-    @Override
-    public StatCode getCode() {
-        return StatCode.PARALLEL_AVERAGE_CHANGE;
-    }
+    @Getter
+    private final StatCode code = StatCode.PARALLEL_AVERAGE_CHANGE;
 
     @Override
     public Double calculateStats(List<Quote> quotes) {

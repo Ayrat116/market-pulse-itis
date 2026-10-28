@@ -1,10 +1,21 @@
 package academy.backend.market_pulse.benchmark;
 
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.factory.InstrumentFactories;
 import academy.backend.market_pulse.model.Currency;
 import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.model.Quote;
-import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Param;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.Warmup;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -13,12 +24,12 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Последовательная и параллельная агрегация одного и того же стрима (см. «План семинара.md»,
- * семинар 6 — Parallel Streams; см. «План семинара.md», раздел «Что уже реализовано»). Параметр {@code size} показывает границу, за которой имеет
- * смысл параллелизм: на малом {@code N} накладные на split/merge через {@code ForkJoinPool}
- * превышают выигрыш, и {@code parallelStream} проигрывает; выигрыш появляется только с ростом объёма
- * (и стоимости операции на элемент). Запускается через JMH-плагин IntelliJ IDEA либо
- * {@code org.openjdk.jmh.Main} из собранного jar.
+ * Последовательная и параллельная агрегация одного и того же стрима. Параметр {@code size}
+ * показывает границу, за которой имеет смысл параллелизм: на малом {@code N} накладные на
+ * split/merge через {@code ForkJoinPool} (источник параллелизма — {@code Spliterator} списка,
+ * делящийся через {@code trySplit}) превышают выигрыш, и {@code parallelStream} проигрывает;
+ * выигрыш появляется только с ростом объёма (и стоимости операции на элемент). Запускается через
+ * JMH-плагин IntelliJ IDEA либо {@code org.openjdk.jmh.Main} из собранного jar.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -35,7 +46,7 @@ public class StreamParallelBenchmark {
 
     @Setup
     public void setup() {
-        Instrument stock = InstrumentFactories.create("STOCK", "SBER", "Сбербанк", Currency.RUB);
+        Instrument stock = InstrumentFactories.create(InstrumentType.STOCK, "SBER", "Сбербанк", Currency.RUB);
         Random random = new Random(42);
         quotes = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {

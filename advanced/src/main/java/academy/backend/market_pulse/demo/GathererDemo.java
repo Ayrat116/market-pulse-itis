@@ -1,102 +1,148 @@
 package academy.backend.market_pulse.demo;
 
-import academy.backend.market_pulse.factory.InstrumentFactories;
 import academy.backend.market_pulse.gather.MovingAverageGatherer;
-import academy.backend.market_pulse.model.Currency;
-import academy.backend.market_pulse.model.Instrument;
-import academy.backend.market_pulse.model.Quote;
+import academy.backend.market_pulse.gather.SlidingSpreadGatherer;
 
 import java.math.BigDecimal;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.math.RoundingMode;
 import java.util.List;
-import java.util.stream.Gatherer;
+import java.util.function.Supplier;
 import java.util.stream.Gatherers;
 
 /**
- * Демо Gatherer API (семинар 6; см. «План семинара.md», раздел «Что уже реализовано»). На примере скользящих окон по changePercent:
- * <ul>
- *   <li>{@link Gatherers#windowSliding} — встроенный гейтерер, материализует окна-списки;</li>
- *   <li>{@link MovingAverageGatherer} — кастомный гейтерер из проекта (скользящее среднее «на лету»);</li>
- *   <li>{@link #slidingMax(int)} — кастомный гейтерер (максимум в окне), который встроенными
- *       операциями (map/filter/limit/max) не выразить.</li>
- * </ul>
+ * Все встроенные фабрики {@code java.util.stream.Gatherers} рядом с кастомным {@code Gatherer}.
+ * {@code HistoryCommand} использует только
+ * {@link MovingAverageGatherer} — этот демо-класс показывает, чем он отличается от штатной
+ * альтернативы {@code windowSliding}, и разбирает ещё три встроенных фабрики, которых в реальном
+ * коде проекта нет.
  */
-@SuppressWarnings("JavaPrintToLogpoint")
 public class GathererDemo {
 
-    static void main() {
-        List<Quote> quotes = sampleQuotes();
+    public static void main(String[] args) {
+        List<BigDecimal> prices = List.of(
+                new BigDecimal("244.00"), new BigDecimal("246.50"), new BigDecimal("245.00"),
+                new BigDecimal("248.00"), new BigDecimal("250.00"), new BigDecimal("249.50"),
+                new BigDecimal("251.20"));
 
-        System.out.println("=============== исходные котировки ===============");
-        quotes.forEach(quote -> System.out.printf("  %s: change=%5s%n",
-                quote.getInstrument().getTicker(), quote.getChangePercent()));
+        System.out.println("=============== Gatherers.windowSliding(3) — встроенный ===============");
+        windowSliding(prices);
 
-        System.out.println("=============== windowSliding(3) — встроенный ===============");
-        quotes.stream()
-                .gather(Gatherers.windowSliding(3))
-                .forEach(window -> System.out.println("  " + window));
+        System.out.println("=============== MovingAverageGatherer.movingAverage(3) — кастомный ===============");
+        customMovingAverage(prices);
 
-        System.out.println("=============== MovingAverageGatherer.movingAverage(3) ===============");
-        quotes.stream()
-                .map(Quote::getChangePercent)
-                .gather(MovingAverageGatherer.movingAverage(3))
-                .forEach(sma -> System.out.println("  SMA = " + sma));
+        System.out.println("=============== Gatherers.windowFixed(2) — неперекрывающиеся пакеты ===============");
+        windowFixed(prices);
 
-        System.out.println("=============== slidingMax(3) — кастомный ===============");
-        quotes.stream()
-                .gather(slidingMax(3))
-                .forEach(max -> System.out.println("  максимум окна = " + max));
+        System.out.println("=============== Gatherers.scan — нарастающий итог ===============");
+        scan(prices);
+
+        System.out.println("=============== Gatherers.mapConcurrent(3) — ограниченная конкурентность ===============");
+        mapConcurrent(List.of("SBER", "GAZP", "LKOH", "AAPL", "FXUS"));
+
+        System.out.println("=============== SlidingSpreadGatherer.spread(3) — кастомный, реальная задача ===============");
+        slidingSpread(prices);
     }
 
     /**
-     * Кастомный гейтерер: максимум {@code changePercent} в скользящем окне из последних {@code k}
-     * котировок. Состояние — окно значений и текущий максимум; максимум обновляется
-     * инкрементально и пересчитывается лишь когда из окна вылетает актуальный максимум.
+     * Встроенный {@code windowSliding} сначала материализует каждое окно как отдельный
+     * {@code List<BigDecimal>} — дальше нужен ещё один {@code map}, чтобы посчитать среднее.
+     * Все {@code k} окон одновременно существуют в памяти как объекты списков.
      */
-    private static Gatherer<Quote, WindowMax, BigDecimal> slidingMax(int k) {
-        // Уже готовый Gatherer.ofSequential
-        return Gatherer.ofSequential(
-                // Cоздаем наш начальный State
-                WindowMax::new,
-                // Это наша функция Integrator
-                (state, quote, downstream) -> {
-                    BigDecimal value = quote.getChangePercent();
-                    // Добавляем элемент в наше скользящее окно
-                    state.window.addLast(value);
-                    if (state.window.size() > k) {
-                        // Если окно превышает размер, то выкидываем первый элемент
-                        BigDecimal removed = state.window.removeFirst();
-                        // Если первый был максимальным, то пересчитываем максимум
-                        if (removed.equals(state.max)) {
-                            state.max = state.window.stream()
-                                    .max(BigDecimal::compareTo)
-                                    .orElse(BigDecimal.valueOf(Long.MIN_VALUE));
-                        }
-                    }
-                    state.max = state.max.max(value);
-                    // Вызываем downstream на результате
-                    return downstream.push(state.max);  // Возвращаем boolean
-                });
+    private static void windowSliding(List<BigDecimal> prices) {
+        prices.stream()
+                .gather(Gatherers.windowSliding(3))
+                .map(window -> average(window))
+                .forEach(sma -> System.out.println("  окно -> среднее = " + sma));
     }
 
-    /* Наш State */
-    private static final class WindowMax {
-        private final Deque<BigDecimal> window = new ArrayDeque<>();
-        private BigDecimal max = BigDecimal.valueOf(Long.MIN_VALUE);
+    /**
+     * {@link MovingAverageGatherer} считает ровно тот же результат за один проход конвейера, без
+     * промежуточного {@code map}: окно и сумма — внутреннее состояние {@code integrator}, среднее
+     * считается и испускается сразу, как только окно заполнено.
+     */
+    private static void customMovingAverage(List<BigDecimal> prices) {
+        prices.stream()
+                .gather(MovingAverageGatherer.movingAverage(3))
+                .forEach(sma -> System.out.println("  SMA = " + sma));
     }
 
-    private static List<Quote> sampleQuotes() {
-        Instrument sber = InstrumentFactories.create("STOCK", "SBER", "Сбербанк", Currency.RUB);
-        return List.of(
-                new Quote(sber, new BigDecimal("250.00"), new BigDecimal("1.2")),
-                new Quote(sber, new BigDecimal("249.00"), new BigDecimal("-0.8")),
-                new Quote(sber, new BigDecimal("252.00"), new BigDecimal("2.3")),
-                new Quote(sber, new BigDecimal("253.00"), new BigDecimal("0.5")),
-                new Quote(sber, new BigDecimal("251.00"), new BigDecimal("1.0")),
-                new Quote(sber, new BigDecimal("261.00"), new BigDecimal("-0.8")),
-                new Quote(sber, new BigDecimal("257.00"), new BigDecimal("-0.5")),
-                new Quote(sber, new BigDecimal("253.00"), new BigDecimal("1.5")),
-                new Quote(sber, new BigDecimal("250.50"), new BigDecimal("-1.1")));
+    /**
+     * {@code windowFixed(n)} режет поток на НЕперекрывающиеся пакеты по {@code n} элементов — в
+     * отличие от {@code windowSliding}, где соседние окна делят между собой часть элементов.
+     * Последний пакет может быть короче {@code n} (как последняя страница в постраничном переборе —
+     * см. {@code StreamGeneratorsDemo}). Типичное применение — батчевая обработка: отправить
+     * элементы во внешний сервис пачками по {@code n}, а не по одному и не все разом.
+     */
+    private static void windowFixed(List<BigDecimal> prices) {
+        prices.stream()
+                .gather(Gatherers.windowFixed(2))
+                .forEach(batch -> System.out.println("  пакет = " + batch));
+    }
+
+    /**
+     * {@code scan(initial, scanner)} — как {@code reduce}, но испускает КАЖДОЕ промежуточное
+     * состояние, а не только финальное: здесь — «растущий итог» суммы цен вместо одной общей
+     * суммы. Промежуточная операция (конвейер продолжается), а не терминальная.
+     */
+    private static void scan(List<BigDecimal> prices) {
+        prices.stream()
+                .gather(Gatherers.scan(() -> BigDecimal.ZERO, BigDecimal::add))
+                .forEach(runningTotal -> System.out.println("  нарастающий итог = " + runningTotal));
+    }
+
+    /**
+     * {@code mapConcurrent(n, mapper)} — тот же {@code map}, но до {@code n} вызовов {@code mapper}
+     * одновременно; полезно, когда {@code mapper} сам по себе медленный и блокирующий (поход в
+     * сеть), а не арифметика на CPU — ровно то, чем в будущем станет обращение к внешнему
+     * T-Invest API. Ниже — тот же вызов «медленного внешнего сервиса» обычным {@code map} и через
+     * {@code mapConcurrent(3)}: при пяти запросах по ~150 мс обычный {@code map} делает их строго
+     * по одному (~750 мс), {@code mapConcurrent(3)} — до трёх одновременно (~300 мс).
+     */
+    private static void mapConcurrent(List<String> tickers) {
+        long sequentialMs = time(() -> tickers.stream()
+                .map(GathererDemo::fetchFromSlowExternalService)
+                .toList());
+        System.out.println("  обычный map:      ~" + sequentialMs + " мс");
+
+        long concurrentMs = time(() -> tickers.stream()
+                .gather(Gatherers.mapConcurrent(3, GathererDemo::fetchFromSlowExternalService))
+                .toList());
+        System.out.println("  mapConcurrent(3): ~" + concurrentMs + " мс");
+    }
+
+    private static long time(Supplier<List<String>> action) {
+        long start = System.nanoTime();
+        List<String> result = action.get();
+        long elapsedMs = (System.nanoTime() - start) / 1_000_000;
+        System.out.println("    -> " + result);
+        return elapsedMs;
+    }
+
+    /** Эмуляция похода в сеть — реального сервиса пока нет. */
+    private static String fetchFromSlowExternalService(String ticker) {
+        try {
+            Thread.sleep(150);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return ticker + ":OK";
+    }
+
+    /**
+     * {@link SlidingSpreadGatherer} — разница между max и min в скользящем окне из 3 цен подряд.
+     * Классическая «реальная задача» для Gatherer API: ни {@code map}, ни {@code filter},
+     * ни {@code reduce} сами по себе не выразят «окно из последних N значений» — нужно состояние
+     * между соседними элементами конвейера, то есть ровно то, для чего и нужен Gatherer API.
+     */
+    private static void slidingSpread(List<BigDecimal> prices) {
+        prices.stream()
+                .gather(SlidingSpreadGatherer.spread(3))
+                .forEach(spread -> System.out.println("  разброс (max - min) = " + spread));
+    }
+
+    private static BigDecimal average(List<BigDecimal> window) {
+        return window.stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(window.size()), 2, RoundingMode.HALF_UP);
     }
 }

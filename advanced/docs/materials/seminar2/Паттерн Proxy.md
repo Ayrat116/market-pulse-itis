@@ -120,7 +120,7 @@ void example() {
         long start = System.nanoTime();
         Object result = methodProxy.invokeSuper(obj, args);
         System.out.printf(
-                "%s() выполнен за %d нс%n", 
+                "%s() выполнен за %d нс%n",
                 method.getName(), System.nanoTime() - start);
         return result;
     });

@@ -1,8 +1,9 @@
 package academy.backend.market_pulse.stat.impl;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.stat.Stat;
-import academy.backend.market_pulse.stat.StatCode;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -13,10 +14,8 @@ import java.util.List;
  */
 public class AverageChangeStat implements Stat<Double> {
 
-    @Override
-    public StatCode getCode() {
-        return StatCode.AVERAGE_CHANGE;
-    }
+    @Getter
+    private final StatCode code = StatCode.AVERAGE_CHANGE;
 
     @Override
     public Double calculateStats(List<Quote> quotes) {

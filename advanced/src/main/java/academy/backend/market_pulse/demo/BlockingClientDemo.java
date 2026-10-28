@@ -12,7 +12,7 @@ import academy.backend.market_pulse.client.impl.HttpUrlConnectionTInvestApiClien
 import academy.backend.market_pulse.config.TInvestApiProperties;
 
 /**
- * Демо этапа 3 «Наивное решение: больше потоков» (см. «План семинара.md», семинар 7): показывает
+ * Демо «Наивное решение: больше потоков»: показывает
  * потолок этого решения — проблему, которую решает Reactor, — вживую, а не рассказывает о ней.
  * Небольшой фиксированный пул потоков ({@value #POOL_SIZE}) обслуживает {@value #REQUEST_COUNT}
  * одновременных запросов через блокирующий {@link HttpUrlConnectionTInvestApiClient#fetchQuotes()} — по

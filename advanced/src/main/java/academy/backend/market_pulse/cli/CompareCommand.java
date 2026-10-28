@@ -12,10 +12,9 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 
 /**
- * Сравнение доходности инструментов по тикерам, по убыванию изменения цены (см. «План семинара.md»,
- * семинар 6, см. «План семинара.md», «Что уже реализовано» — map + flatMap(Optional::stream) + sorted). {@code quoteFor} в {@code map} —
- * операция с побочным эффектом (пишет в кеш/очередь {@code QuoteService}); здесь это осознанно
- * допустимо, так как стрим последовательный.
+ * Сравнение доходности инструментов по тикерам, по убыванию изменения цены:
+ * {@code map} тикеров в котировки, {@code flatMap(Optional::stream)} отбрасывает ненайденные,
+ * {@code sorted} — по доходности.
  */
 @Command(name = "compare", description = "Сравнить доходность инструментов по тикерам (по убыванию изменения цены)")
 @RequiredArgsConstructor
@@ -29,7 +28,7 @@ public class CompareCommand implements Callable<Integer> {
     @Override
     public Integer call() {
         tickers.stream()
-                .map(quoteService::quoteFor)          // String -> Optional<Quote>
+                .map(quoteService::quoteFor)          // Optional<Quote>
                 .flatMap(Optional::stream)            // отбрасываем ненайденные
                 .sorted(Comparator.comparing(Quote::getChangePercent).reversed())
                 .forEach(System.out::println);

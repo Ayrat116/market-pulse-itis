@@ -12,6 +12,7 @@
 6. try-with-resources и AutoCloseable
 7. Из чего складывается стоимость исключения
 8. Когда исключения — не тот инструмент
+9. Полезные ссылки
 
 ---
 
@@ -69,22 +70,28 @@ Java, при всей объектной ориентированности, н�
 каждый промежуточный вызов, и вынести обработку ошибок в отдельный блок:
 
 ```java
-// стиль с кодами возврата — проверка после каждого шага
-Instrument instrument = tryCreate(type, ticker, name, currency);
-if (instrument == null) {
-    return handleError();
-}
-boolean added = tryAdd(repository, instrument);
-if (!added) {
-    return handleError();
+Object withReturnCodes() {
+    // стиль с кодами возврата — проверка после каждого шага
+    Instrument instrument = tryCreate(type, ticker, name, currency);
+    if (instrument == null) {
+        return handleError();
+    }
+    boolean added = tryAdd(repository, instrument);
+    if (!added) {
+        return handleError();
+    }
+    return instrument;
 }
 
-// стиль с исключениями — линейный happy path, ошибки в одном месте
-try {
-    Instrument instrument = create(type, ticker, name, currency);
-    repository.add(instrument);
-} catch (IllegalArgumentException | DuplicateTickerException e) {
-    return handleError(e);
+Object withExceptions() {
+    // стиль с исключениями — линейный happy path, ошибки в одном месте
+    try {
+        Instrument instrument = create(type, ticker, name, currency);
+        repository.add(instrument);
+        return instrument;
+    } catch (IllegalArgumentException | DuplicateTickerException e) {
+        return handleError(e);
+    }
 }
 ```
 
@@ -180,8 +187,8 @@ Spring Data оборачивает checked `SQLException` в unchecked `DataAcce
 `Throwable` практически никогда не оправдано в прикладном коде.
 
 **Неизменяемость и осмысленное сообщение.** Собственное исключение — обычный объект: если оно несёт данные (например,
-тикер), эти данные стоит делать `final` и передавать через конструктор, как любой другой неизменяемый объект (см.
-материал семинара 3 «ФП в Java», раздел про immutability). Сообщение (`getMessage()`) должно быть информативным для
+тикер), эти данные стоит делать `final` и передавать через конструктор, как любой другой неизменяемый объект.
+Сообщение (`getMessage()`) должно быть информативным для
 человека, читающего логи, а не просто повторять имя класса исключения.
 
 ```java
@@ -215,11 +222,13 @@ public class DuplicateTickerException extends RuntimeException {
 числе при исключении, писали через `try/finally`:
 
 ```java
-FileInputStream stream = new FileInputStream("data.txt");
-try {
-    // работа с потоком
-} finally {
-    stream.close();
+void example() throws IOException {
+    FileInputStream stream = new FileInputStream("data.txt");
+    try {
+        // работа с потоком
+    } finally {
+        stream.close();
+    }
 }
 ```
 
@@ -233,17 +242,21 @@ try {
 *подавленное* (suppressed) и доступно через `getSuppressed()`, а не теряется.
 
 ```java
-try (FileInputStream stream = new FileInputStream("data.txt")) {
-    // работа с потоком
-} // close() вызывается автоматически, даже если тело блока бросит исключение
+void example() throws IOException {
+    try (FileInputStream stream = new FileInputStream("data.txt")) {
+        // работа с потоком
+    } // close() вызывается автоматически, даже если тело блока бросит исключение
+}
 ```
 
 Ресурсов может быть несколько — закрываются они в порядке, обратном объявлению:
 
 ```java
-try (var in = new FileInputStream("data.txt");
-     var out = new FileOutputStream("copy.txt")) {
-    // сначала закроется out, затем in
+void example() throws IOException {
+    try (var in = new FileInputStream("data.txt");
+         var out = new FileOutputStream("copy.txt")) {
+        // сначала закроется out, затем in
+    }
 }
 ```
 
@@ -268,7 +281,7 @@ try-with-resources по пути. Эта часть тоже не бесплат
 `Throwable` предоставляет способ отключить самую дорогую часть — заполнение трассировки стека — через
 четырёхаргументный защищённый конструктор:
 
-```java
+```
 protected Throwable(String message, Throwable cause,
                      boolean enableSuppression, boolean writableStackTrace)
 ```
@@ -278,8 +291,21 @@ protected Throwable(String message, Throwable cause,
 осознанный компромисс, уместный только там, где стоимость `fillInStackTrace()` доказанно значима (частое
 использование в горячем пути) и где место возникновения не требуется для диагностики.
 
-Практический замер разницы между обычным исключением, исключением без трассировки стека и кодом возврата — на
-продвинутом треке и в материале «JMH и замер производительности».
+Тот же эффект даёт переопределение `fillInStackTrace()` пустой реализацией (`return this`): трассировка не
+собирается, остальное поведение исключения не меняется.
+
+**Порядок величин.** Замер через JMH (JDK 25, подробности — в «Результаты JMH»): возврат кода — доли наносекунды,
+обычное `throw`/`catch` с трассировкой — сотни наносекунд (на порядки дороже), то же исключение без трассировки —
+единицы-десятки наносекунд. То есть почти вся цена исключения — это не сам механизм `throw`/`catch`, а сбор стека.
+Точные числа зависят от глубины стека в момент создания и от железа, но порядок разницы стабилен.
+
+**Оптимизация JVM для «горячих» исключений.** В HotSpot есть флаг `-XX:+OmitStackTraceInFastThrow` (включён по
+умолчанию): если JIT-компилятор C2 видит, что одно и то же место очень часто кидает одно из пяти исключений, которые
+порождает сама JVM при провале байт-код инструкции — `NullPointerException`, `ArithmeticException`,
+`ArrayIndexOutOfBoundsException`, `ArrayStoreException`, `ClassCastException`, — он подменяет их заранее созданным
+объектом без стектрейса. К исключениям, брошенным явно через `throw new ...`, это не относится. Побочный эффект,
+который стоит знать: в логах продакшена такие исключения могут «внезапно» прийти без трассировки; для диагностики
+флаг отключают (`-XX:-OmitStackTraceInFastThrow`).
 
 ---
 
@@ -302,3 +328,33 @@ protected Throwable(String message, Throwable cause,
 задачу «не дать ошибке потеряться», но не решает задачу «дать разработчику, читающему логи через полгода, понять, что
 произошло». Осмысленное сообщение — не опциональная деталь, а часть контракта исключения не в меньшей степени, чем
 его тип.
+
+---
+
+## 9. Полезные ссылки
+
+Базовая база про исключения
+
+- https://www.baeldung.com/java-exceptions
+- https://docs.oracle.com/javase/tutorial/essential/exceptions/index.html
+- https://www.baeldung.com/java-checked-unchecked-exceptions
+- https://www.baeldung.com/java-errors-vs-exceptions
+- https://medium.com/@AlexanderObregon/the-difference-between-checked-and-unchecked-exceptions-in-java-for-beginners-c3943786c40a
+- https://medium.com/@AlexanderObregon/effective-error-handling-in-java-strategies-and-best-practices-b64226c9970b
+- https://www.infoworld.com/article/2267867/exceptions-in-java-part-2-advanced-features-and-types.html — про
+  формирование
+  stack-трейса и что с ним можно делать; на практике используется редко, но для базового понимания полезно
+
+Перформанс исключений
+
+- https://www.baeldung.com/java-exceptions-performance — о стоимости исключений, закрепляет то, что разбирается в
+  разделе 7
+- https://stackoverflow.com/questions/299068/what-are-the-effects-of-exceptions-on-performance-in-java
+- https://www.ibm.com/docs/en/i/7.4.0?topic=performance-java-exception-considerations
+- https://www.youtube.com/watch?v=2OJXRwtjfg0 — очень хорошее выступление на JPoint про исключения, рекомендуется к
+  ознакомлению
+
+JMH
+
+- https://www.baeldung.com/java-microbenchmark-harness
+- https://github.com/openjdk/jmh

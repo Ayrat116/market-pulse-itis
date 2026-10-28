@@ -18,8 +18,7 @@ import academy.backend.market_pulse.model.Instrument;
  *     переданной.</li>
  *     <li>ФТ6. Есть правило «по цене» — применимо только к {@code Stock}: для остальных типов
  *     инструментов — всегда {@code false}. В роли цены — дивидендная доходность
- *     ({@code Stock.getDividendYield()}), единственный числовой атрибут акции на этом этапе
- *     проекта.</li>
+ *     ({@code Stock.getDividendYield()}), единственный числовой атрибут акции.</li>
  *     <li>ФТ7. Критерии взаимоисключающие — одновременно действует не больше одного правила
  *     отбора; если пользователь запросил больше одного сразу — это ошибка, а не молчаливая
  *     комбинация.</li>
@@ -33,6 +32,7 @@ import academy.backend.market_pulse.model.Instrument;
  * list --price-op GE --price 10     // акции с дивидендной доходностью >= 10
  * }</pre>
  */
+@FunctionalInterface
 public interface InstrumentFilter {
 
     boolean matches(Instrument instrument);

@@ -1,8 +1,9 @@
 package academy.backend.market_pulse.stat.impl;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.stat.Stat;
-import academy.backend.market_pulse.stat.StatCode;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,10 +15,8 @@ import java.util.List;
  */
 public class TotalPriceStat implements Stat<BigDecimal> {
 
-    @Override
-    public StatCode getCode() {
-        return StatCode.TOTAL_PRICE;
-    }
+    @Getter
+    private final StatCode code = StatCode.TOTAL_PRICE;
 
     @Override
     public BigDecimal calculateStats(List<Quote> quotes) {

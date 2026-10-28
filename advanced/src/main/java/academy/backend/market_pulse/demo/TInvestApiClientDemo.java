@@ -6,7 +6,7 @@ import academy.backend.market_pulse.config.TInvestApiProperties;
 import academy.backend.market_pulse.model.Quote;
 
 /**
- * Показ этапа 2 (см. «План семинара.md», семинар 7): опорный клиент к {@code instruments-service}
+ * Опорный клиент к {@code instruments-service}
  * против мокового сервера (Docker, см. {@code docker/mockserver} — поднять заранее). Печатает
  * полученные котировки — ровно то, что заменяет собой текущую заглушку {@code QuoteSource}.
  */

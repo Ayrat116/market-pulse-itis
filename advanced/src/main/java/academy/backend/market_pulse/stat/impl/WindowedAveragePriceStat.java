@@ -1,8 +1,9 @@
 package academy.backend.market_pulse.stat.impl;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.stat.Stat;
-import academy.backend.market_pulse.stat.StatCode;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -19,10 +20,8 @@ public class WindowedAveragePriceStat implements Stat<List<BigDecimal>> {
 
     private static final int WINDOW_SIZE = 3;
 
-    @Override
-    public StatCode getCode() {
-        return StatCode.WINDOWED_AVERAGE_PRICE;
-    }
+    @Getter
+    private final StatCode code = StatCode.WINDOWED_AVERAGE_PRICE;
 
     @Override
     public List<BigDecimal> calculateStats(List<Quote> quotes) {

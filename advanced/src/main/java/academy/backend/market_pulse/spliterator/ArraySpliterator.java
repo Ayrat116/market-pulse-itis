@@ -5,14 +5,14 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 
 /**
- * Простейший самописный {@link Spliterator} над {@link List} с произвольным доступом (семинар 6):
+ * Простейший самописный {@link Spliterator} над {@link List} с произвольным доступом:
  * хранит не сам список, а диапазон индексов {@code [from, to)} в нём — без копирования элементов.
  * Показывает контракт на минимальном примере, без претензии на универсальность (в отличие от
  * встроенного спилитератора {@code ArrayList}, не умеет {@code ORDERED}-перенастройку середины
  * диапазона и прочие детали промышленной реализации).
  *
- * <p>Используется как источник параллельного стрима напрямую через
- * {@code StreamSupport.stream(spliterator, parallel)} — см. {@code ParallelAverageChangeStat}.
+ * <p>Используется так же, как встроенный: {@code StreamSupport.stream(spliterator, parallel)}
+ * (см. {@code demo/SpliteratorDemo.java}).
  */
 public class ArraySpliterator<T> implements Spliterator<T> {
 
@@ -36,8 +36,7 @@ public class ArraySpliterator<T> implements Spliterator<T> {
         if (from >= to) {
             return false;
         }
-        action.accept(source.get(from));
-        from++;
+        action.accept(source.get(from++));
         return true;
     }
 
@@ -49,14 +48,14 @@ public class ArraySpliterator<T> implements Spliterator<T> {
      */
     @Override
     public Spliterator<T> trySplit() {
-        int remaining = to - from;
-        if (remaining < 2) {
+        int size = to - from;
+        if (size < 2) {
             return null;
         }
-        int splitPoint = from + remaining / 2;
-        Spliterator<T> left = new ArraySpliterator<>(source, from, splitPoint);
-        this.from = splitPoint;
-        return left;
+        int middle = from + size / 2;
+        ArraySpliterator<T> firstHalf = new ArraySpliterator<>(source, from, middle);
+        from = middle;
+        return firstHalf;
     }
 
     /** Размер известен точно (диапазон индексов) — отсюда характеристика {@code SIZED}. */

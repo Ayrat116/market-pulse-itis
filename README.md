@@ -18,7 +18,7 @@
 ## Что мы строим
 
 **Market Pulse** — консольное приложение на Java, которое работает с реальными биржевыми данными
-через [T-Invest API](https://developer.tbank.ru/invest/intro/intro). К концу семестра у каждого студента будет рабочий
+через [T-Invest API](https://developer.tbank.ru/invest/intro/intro). В результате получится рабочий
 инструмент, который можно положить в портфолио.
 
 ---

@@ -3,21 +3,18 @@ package academy.backend.market_pulse.demo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
-import academy.backend.market_pulse.client.impl.HttpClientTInvestApiClient;
 import academy.backend.market_pulse.client.TInvestApiClient;
 import academy.backend.market_pulse.client.impl.HttpUrlConnectionTInvestApiClient;
 import academy.backend.market_pulse.client.impl.reactor.ReactorTInvestApiClient;
 import academy.backend.market_pulse.config.TInvestApiProperties;
 
 /**
- * Живая демонстрация этапа 9 (см. «План семинара.md», семинар 7): четыре способа сходить за
+ * Живая демонстрация: три способа сходить за
  * котировками {@code N} раз к моковому серверу и измерить пропускную способность — без JMH, просто
  * по часам ({@link System#nanoTime()}), чтобы цифры менялись на глазах у группы:
  *
@@ -26,9 +23,8 @@ import academy.backend.market_pulse.config.TInvestApiProperties;
  *       в цикле один за другим: каждый запрос ждёт предыдущий;
  *   <li><b>Многопоточность</b> — тот же блокирующий клиент, но запросы раздаются пулу потоков
  *       (поток на запрос);
- *   <li><b>Reactor</b> — все N запросов уходят сразу в один поток событийного цикла;
- *   <li><b>HttpClient.sendAsync</b> — готовый клиент из JDK: все N запросов уходят сразу, ответы
- *       собираются в {@link CompletableFuture}.
+ *   <li><b>Reactor</b> — все N запросов уходят подряд в один поток событийного цикла, а вызывающий
+ *       поток ждёт один раз на весь пакет ({@code fetchQuotesBatch}).
  * </ol>
  *
  * <p>Запуск: {@code ClientThroughputDemo [запросов] [размер пула]} (по умолчанию 30 и 10). Моковый
@@ -59,14 +55,9 @@ public class ClientThroughputDemo {
 
         try (ReactorTInvestApiClient reactorClient = new ReactorTInvestApiClient(properties)) {
             reactorClient.fetchQuotes();
-            long reactorMs = measureAsync(reactorClient::fetchQuotesAsync, requests);
+            long reactorMs = measureReactorBatch(reactorClient, requests);
             report("3. Reactor: один поток цикла", requests, reactorMs);
         }
-
-        HttpClientTInvestApiClient httpClient = new HttpClientTInvestApiClient(properties);
-        httpClient.fetchQuotes();
-        long httpClientMs = measureAsync(httpClient::fetchQuotesAsync, requests);
-        report("4. HttpClient.sendAsync", requests, httpClientMs);
     }
 
     private static long measureOneThread(TInvestApiClient client, int requests) {
@@ -77,13 +68,9 @@ public class ClientThroughputDemo {
         return elapsedMillis(start);
     }
 
-    private static long measureAsync(Supplier<CompletableFuture<?>> request, int requests) {
+    private static long measureReactorBatch(ReactorTInvestApiClient client, int requests) {
         long start = System.nanoTime();
-        List<CompletableFuture<?>> futures = new ArrayList<>(requests);
-        for (int i = 0; i < requests; i++) {
-            futures.add(request.get());
-        }
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        client.fetchQuotesBatch(requests);
         return elapsedMillis(start);
     }
 

@@ -1,5 +1,6 @@
 package academy.backend.market_pulse.cli;
 
+import lombok.RequiredArgsConstructor;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -13,11 +14,11 @@ import picocli.CommandLine.Parameters;
 /**
  * Делистинг инструментов: точечно по тикеру ({@link InstrumentRepository#remove}) либо массово
  * по валюте ({@link InstrumentRepository#removeIf}, единственный способ пройтись по неизвестному
- * заранее числу инструментов и убрать подходящие — демонстрация {@code Iterator.remove()} на
- * реальной задаче, см. «План семинара.md», семинар 5, этап 5). В обоих случаях следом прибирается
- * watchlist, если в нём остались тикеры удалённых инструментов.
+ * заранее числу инструментов и убрать подходящие). В обоих случаях следом прибирается watchlist,
+ * если в нём остались тикеры удалённых инструментов.
  */
 @Command(name = "remove", description = "Удалить инструмент(ы) из репозитория (делистинг)")
+@RequiredArgsConstructor
 public class RemoveCommand implements Callable<Integer> {
 
     @Parameters(index = "0", arity = "0..1", description = "Тикер инструмента")
@@ -28,11 +29,6 @@ public class RemoveCommand implements Callable<Integer> {
 
     private final InstrumentRepository repository;
     private final Watchlist watchlist;
-
-    public RemoveCommand(InstrumentRepository repository, Watchlist watchlist) {
-        this.repository = repository;
-        this.watchlist = watchlist;
-    }
 
     @Override
     public Integer call() {

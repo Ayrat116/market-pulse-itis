@@ -24,7 +24,7 @@ import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
 /**
- * Замер для «MappedByteBuffer vs Files» (см. «План семинара.md», семинар 7, вне тайминга занятия).
+ * Замер для «MappedByteBuffer vs Files».
  * Запускать с {@code -prof gc} — время чтения у обоих подходов сопоставимо (оба читают один и тот
  * же файл с диска), а вот аллокации в куче отличаются на порядки: {@code Files.readAllBytes}
  * выделяет {@code byte[]} размером с файл на каждый вызов, {@code FileChannel.map} — нет (страницы

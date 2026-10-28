@@ -6,7 +6,7 @@ import academy.backend.market_pulse.client.impl.reactor.ReactorTInvestApiClient;
 import academy.backend.market_pulse.config.TInvestApiProperties;
 
 /**
- * Простой переключатель реализации клиента (см. «План семинара.md», семинар 7) — не
+ * Простой переключатель реализации клиента — не
  * полноценный feature-flagging фреймворк, просто `enum` и фабричный метод: вызывающему коду
  * неважно, какая реализация выбрана, все — {@link TInvestApiClient}.
  */

@@ -1,23 +1,26 @@
 package academy.backend.market_pulse.model;
 
+import academy.backend.market_pulse.dictionary.InstrumentType;
+import academy.backend.market_pulse.model.aware.DividendsAware;
+import lombok.Getter;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import lombok.Getter;
-
 /**
- * Акция. В отличие от {@link Bond} и {@link Etf}, только у акций есть
- * дивидендная доходность — поэтому {@code getDividends} объявлен здесь,
- * а не в {@link Instrument}, и реализует {@link DividendPaying}.
+ * Акция — долевая ценная бумага: удостоверяет право владельца на долю в капитале компании,
+ * участие в управлении и получение части прибыли эмитента в виде дивидендов.
  */
 @Getter
-public class Stock extends Instrument implements DividendPaying {
+public class Stock extends Instrument implements DividendsAware {
+
+    private final InstrumentType type = InstrumentType.STOCK;
 
     private final String sector;
 
     /**
-     * Дивидендная доходность в процентах — единственный числовой атрибут акции на этом этапе
-     * проекта, используется в том числе как «аналог цены» в фильтрации ({@code PriceFilter}).
+     * Дивидендная доходность в процентах — единственный числовой атрибут акции,
+     * используется, в том числе, как «аналог цены» в фильтрации ({@code PriceFilter}).
      */
     private final BigDecimal dividendYield;
 
@@ -31,11 +34,6 @@ public class Stock extends Instrument implements DividendPaying {
     @Override
     public String getDescription() {
         return "Акция, сектор: " + sector;
-    }
-
-    @Override
-    public String getType() {
-        return "STOCK";
     }
 
     /**

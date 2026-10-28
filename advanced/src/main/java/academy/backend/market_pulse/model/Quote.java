@@ -1,26 +1,21 @@
 package academy.backend.market_pulse.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 import java.math.BigDecimal;
 
-import lombok.Getter;
-
 /**
- * Рыночная котировка: инструмент + цена + изменение за период. Использует
- * агрегацию, а не наследование от {@link Stock} (см. «План семинара.md» —
- * эволюция StockSnapshot → Quote).
+ * Рыночная котировка: инструмент + цена + изменение за период.
+ * Использует агрегацию, а не наследование от {@link Stock}.
  */
 @Getter
+@RequiredArgsConstructor
 public class Quote {
 
     private final Instrument instrument;
     private final BigDecimal price;
     private final BigDecimal changePercent;
-
-    public Quote(Instrument instrument, BigDecimal price, BigDecimal changePercent) {
-        this.instrument = instrument;
-        this.price = price;
-        this.changePercent = changePercent;
-    }
 
     public BigDecimal getDividends() {
         if (instrument instanceof Stock stock) {

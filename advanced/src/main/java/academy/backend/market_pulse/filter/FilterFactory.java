@@ -1,7 +1,8 @@
 package academy.backend.market_pulse.filter;
 
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.model.Currency;
-import academy.backend.market_pulse.model.Stock;
+import lombok.experimental.UtilityClass;
 
 import java.math.BigDecimal;
 
@@ -9,14 +10,12 @@ import java.math.BigDecimal;
  * Выбор конкретного {@link InstrumentFilter} по критериям, переданным из CLI. Критерии
  * взаимоисключающие: одновременно задаётся не больше одного — по типу, по тикеру, по валюте
  * или по цене. Комбинирование нескольких критериев сразу — задача паттерна Chain of
- * Responsibility, за рамками этого семинара.
+ * Responsibility, здесь не реализована.
  */
+@UtilityClass
 public final class FilterFactory {
 
-    private FilterFactory() {
-    }
-
-    public static InstrumentFilter create(String type, String ticker, Currency currency,
+    public static InstrumentFilter create(InstrumentType type, String ticker, Currency currency,
                                           PriceFilter.Operator priceOperator, BigDecimal price) {
         int criteriaCount = count(type != null, ticker != null, currency != null, priceOperator != null);
         if (criteriaCount > 1) {
@@ -25,28 +24,18 @@ public final class FilterFactory {
                             + "--price-op/--price");
         }
         if (type != null) {
-            return i -> i.getType().equalsIgnoreCase(type);
+            return new TypeFilter(type);
         }
         if (ticker != null) {
-            return i -> i.getTicker().toUpperCase().contains(ticker.toUpperCase());
+            return new TickerFilter(ticker);
         }
         if (currency != null) {
-            return i -> i.getCurrency() == currency;
+            return new CurrencyFilter(currency);
         }
         if (priceOperator != null) {
-            return i -> {
-                if (!(i instanceof Stock stock)) {
-                    return false;
-                }
-                int comparison = stock.getDividendYield().compareTo(price);
-                return switch (priceOperator) {
-                    case GE -> comparison >= 0;
-                    case LE -> comparison <= 0;
-                    case EQ -> comparison == 0;
-                };
-            };
+            return new PriceFilter(priceOperator, price);
         }
-        return _ -> true;
+        return new NoOpFilter();
     }
 
     private static int count(boolean... flags) {

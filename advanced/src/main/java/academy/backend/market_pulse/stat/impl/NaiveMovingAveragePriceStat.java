@@ -1,8 +1,9 @@
 package academy.backend.market_pulse.stat.impl;
 
+import academy.backend.market_pulse.dictionary.StatCode;
 import academy.backend.market_pulse.model.Quote;
 import academy.backend.market_pulse.stat.Stat;
-import academy.backend.market_pulse.stat.StatCode;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,18 +20,15 @@ import java.util.stream.IntStream;
  * приближение: вручную перебрать начальные индексы окон через {@code IntStream.rangeClosed} и для
  * каждого индекса получить окно через {@code List.subList} (не стрим-операция — обычный метод
  * {@code List}). Дальше для каждого окна — обычный {@code collect(Collectors.averagingDouble(...))}.
- * Работает, но плодит {@code subList}-представления (на каждый индекс — своё) и пересчитывает
- * среднее заново для каждого окна, не переиспользуя предыдущее: {@code O(N * windowSize)} на весь
- * список, а не {@code O(N)}, как у `Gatherer`-версии ниже.
+ * Работает, но плодит {@code subList}-представления и пересчитывает среднее заново для каждого
+ * окна — {@code O(N * windowSize)} на весь список, а не {@code O(N)}, как у `Gatherer`-версии.
  */
 public class NaiveMovingAveragePriceStat implements Stat<List<Double>> {
 
     private static final int WINDOW_SIZE = 3;
 
-    @Override
-    public StatCode getCode() {
-        return StatCode.NAIVE_MOVING_AVERAGE_PRICE;
-    }
+    @Getter
+    private final StatCode code = StatCode.NAIVE_MOVING_AVERAGE_PRICE;
 
     @Override
     public List<Double> calculateStats(List<Quote> quotes) {
@@ -39,8 +37,8 @@ public class NaiveMovingAveragePriceStat implements Stat<List<Double>> {
             return List.of();
         }
         return IntStream.rangeClosed(0, prices.size() - WINDOW_SIZE)
-                .mapToObj(start -> prices.subList(start, start + WINDOW_SIZE))
-                .map(window -> window.stream().collect(Collectors.averagingDouble(BigDecimal::doubleValue)))
+                .mapToObj(start -> prices.subList(start, start + WINDOW_SIZE).stream()
+                        .collect(Collectors.averagingDouble(BigDecimal::doubleValue)))
                 .toList();
     }
 }

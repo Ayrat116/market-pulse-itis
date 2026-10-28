@@ -1,11 +1,18 @@
 package academy.backend.market_pulse.model;
 
-import java.math.BigDecimal;
-
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+
+/**
+ * Облигация — долговая ценная бумага: эмитент занимает деньги у владельца облигации
+ * и обязуется выплачивать купонный доход, а в дату погашения — вернуть номинал.
+ */
 @Getter
 public class Bond extends Instrument {
+
+    private final InstrumentType type = InstrumentType.BOND;
 
     private final BigDecimal couponRate;
     private final int maturityYear;
@@ -20,10 +27,5 @@ public class Bond extends Instrument {
     @Override
     public String getDescription() {
         return "Облигация, купон: " + couponRate + "%, погашение: " + maturityYear;
-    }
-
-    @Override
-    public String getType() {
-        return "BOND";
     }
 }

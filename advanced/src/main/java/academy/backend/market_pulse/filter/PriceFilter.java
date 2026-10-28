@@ -1,17 +1,18 @@
 package academy.backend.market_pulse.filter;
 
-import java.math.BigDecimal;
-
 import academy.backend.market_pulse.model.Instrument;
 import academy.backend.market_pulse.model.Stock;
+
+import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
 
 /**
  * Отбор по цене — применим только к {@link Stock}: остальные типы инструментов сегодня не несут
  * числового значения цены, поэтому для них {@code matches} всегда возвращает {@code false}. В
  * роли цены — дивидендная доходность ({@link Stock#getDividendYield()}), единственный числовой
- * атрибут акции на этом этапе проекта.
+ * атрибут акции.
  */
-@Deprecated
+@RequiredArgsConstructor
 public class PriceFilter implements InstrumentFilter {
 
     public enum Operator {
@@ -20,11 +21,6 @@ public class PriceFilter implements InstrumentFilter {
 
     private final Operator operator;
     private final BigDecimal threshold;
-
-    public PriceFilter(Operator operator, BigDecimal threshold) {
-        this.operator = operator;
-        this.threshold = threshold;
-    }
 
     @Override
     public boolean matches(Instrument instrument) {

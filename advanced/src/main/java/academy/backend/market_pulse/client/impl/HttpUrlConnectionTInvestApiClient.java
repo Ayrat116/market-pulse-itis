@@ -14,10 +14,10 @@ import academy.backend.market_pulse.exception.TInvestApiException;
 import academy.backend.market_pulse.model.Quote;
 
 /**
- * Опорная реализация {@link TInvestApiClient} на «старом» {@link HttpURLConnection} — показывается
- * на этапе 2 (см. «План семинара.md», семинар 7). Классическая блокирующая модель: одно соединение —
- * один поток, который стоит на {@code getResponseCode()}/{@code read()} всё время ожидания ответа.
- * Именно на ней строятся этапы 3–4: что делать, если запросов много.
+ * Опорная реализация {@link TInvestApiClient} на «старом» {@link HttpURLConnection}. Классическая
+ * блокирующая модель: одно соединение — один поток, который стоит на
+ * {@code getResponseCode()}/{@code read()} всё время ожидания ответа. Именно на ней видно, что
+ * делать, когда запросов много.
  */
 public class HttpUrlConnectionTInvestApiClient implements TInvestApiClient {
 
@@ -41,7 +41,10 @@ public class HttpUrlConnectionTInvestApiClient implements TInvestApiClient {
                 connection.setRequestProperty(TInvestApiProperties.MOCK_SCENARIO_HEADER, properties.getMockScenario());
             }
 
-            int status = connection.getResponseCode(); // блокирует поток до прихода ответа
+            // NOTICE: getResponseCode() блокирует поток до прихода ответа — процессор свободен, а поток
+            //  при этом занят одним-единственным соединением. Таймауты (connect/read) здесь обязательны:
+            //  по умолчанию они бесконечные.
+            int status = connection.getResponseCode();
             if (status != 200) {
                 throw new TInvestApiException("instruments-service вернул неожиданный статус: " + status);
             }
