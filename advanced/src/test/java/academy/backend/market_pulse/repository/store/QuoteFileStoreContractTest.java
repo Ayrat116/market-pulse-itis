@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
 
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -29,8 +30,8 @@ public abstract class QuoteFileStoreContractTest {
         QuoteFileStore store = createStore();
         Path path = tempDir.resolve("quotes.json");
 
-        Instrument sber = InstrumentFactories.create("STOCK", "SBER", "Сбер", Currency.RUB);
-        Instrument ofz = InstrumentFactories.create("BOND", "OFZ26233", "ОФЗ 26233", Currency.RUB);
+        Instrument sber = InstrumentFactories.create(InstrumentType.STOCK, "SBER", "Сбер", Currency.RUB);
+        Instrument ofz = InstrumentFactories.create(InstrumentType.BOND, "OFZ26233", "ОФЗ 26233", Currency.RUB);
         List<Quote> quotes = List.of(
                 new Quote(sber, new BigDecimal("250.00"), new BigDecimal("1.20")),
                 new Quote(ofz, new BigDecimal("780.00"), new BigDecimal("-0.15")));

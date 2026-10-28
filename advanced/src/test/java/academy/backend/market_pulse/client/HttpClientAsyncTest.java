@@ -26,4 +26,6 @@ class HttpClientAsyncTest {
 
         assertEquals(1, client.fetchQuotesAsync().join().size());
     }
+
+
 }

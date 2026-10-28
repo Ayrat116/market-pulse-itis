@@ -78,7 +78,7 @@ public class StreamExercisesReference implements StreamExercises {
     public Map<String, Long> countByTypeGrouped(List<Quote> quotes) {
         return quotes.stream()
                 .collect(Collectors.groupingBy(
-                        quote -> quote.getInstrument().getType(),
+                        quote -> quote.getInstrument().getType().name(),
                         Collectors.counting()));
     }
 
@@ -86,7 +86,7 @@ public class StreamExercisesReference implements StreamExercises {
     public Map<String, Double> averageChangeByType(List<Quote> quotes) {
         return quotes.stream()
                 .collect(Collectors.groupingBy(
-                        quote -> quote.getInstrument().getType(),
+                        quote -> quote.getInstrument().getType().name(),
                         Collectors.averagingDouble(quote -> quote.getChangePercent().doubleValue())));
     }
 

@@ -5,6 +5,7 @@ import academy.backend.market_pulse.model.Instrument;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public interface InstrumentRepository extends Iterable<Instrument> {
 
@@ -26,4 +27,7 @@ public interface InstrumentRepository extends Iterable<Instrument> {
      * а значит без {@code Iterator.remove()} (или {@code removeIf} поверх него) не обойтись.
      */
     Set<String> removeIf(Predicate<Instrument> filter);
+
+    Stream<Instrument> stream();
+
 }

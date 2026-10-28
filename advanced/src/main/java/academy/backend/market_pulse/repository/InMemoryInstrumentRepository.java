@@ -81,4 +81,9 @@ public class InMemoryInstrumentRepository implements InstrumentRepository {
     public Iterator<Instrument> iterator() {
         return instruments.values().iterator();
     }
+
+    @Override
+    public java.util.stream.Stream<Instrument> stream() {
+        return instruments.values().stream();
+    }
 }
