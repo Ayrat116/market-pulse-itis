@@ -1,5 +1,6 @@
 package academy.backend.market_pulse.demo;
 
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.factory.InstrumentFactories;
 import academy.backend.market_pulse.model.Currency;
 import academy.backend.market_pulse.model.Instrument;
@@ -21,8 +22,8 @@ import java.util.Map;
 public class GuavaCollectionsDemo {
 
     public static void main(String[] args) {
-        Instrument sber = InstrumentFactories.create("STOCK", "SBER", "Сбербанк", Currency.RUB);
-        Instrument gazp = InstrumentFactories.create("STOCK", "GAZP", "Газпром", Currency.RUB);
+        Instrument sber = InstrumentFactories.create(InstrumentType.STOCK, "SBER", "Сбербанк", Currency.RUB);
+        Instrument gazp = InstrumentFactories.create(InstrumentType.STOCK, "GAZP", "Газпром", Currency.RUB);
         Quote sberQuote = new Quote(sber, new BigDecimal("250.00"), new BigDecimal("1.20"));
         Quote gazpQuote = new Quote(gazp, new BigDecimal("120.50"), new BigDecimal("-0.80"));
 

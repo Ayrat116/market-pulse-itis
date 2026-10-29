@@ -9,6 +9,7 @@ import academy.backend.market_pulse.model.Quote;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable {
 
@@ -52,6 +53,11 @@ public class ReactorTInvestApiClient implements TInvestApiClient, AutoCloseable 
             throw new TInvestApiException("instruments-service вернул неожиданный статус: " + response.statusCode());
         }
         return InstrumentQuoteMapper.fromJson(response.body());
+    }
+
+    @Override
+    public CompletableFuture<List<Quote>> fetchQuotesAsync() {
+        return CompletableFuture.completedFuture(List.of());
     }
 
     @Override

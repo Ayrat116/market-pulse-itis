@@ -1,5 +1,6 @@
 package academy.backend.market_pulse.demo;
 
+import academy.backend.market_pulse.dictionary.InstrumentType;
 import academy.backend.market_pulse.factory.InstrumentFactories;
 import academy.backend.market_pulse.model.Currency;
 import academy.backend.market_pulse.model.Instrument;
@@ -18,8 +19,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 public class FastUtilCollectionsDemo {
 
     public static void main(String[] args) {
-        Instrument sber = InstrumentFactories.create("STOCK", "SBER", "Сбербанк", Currency.RUB);
-        Instrument gazp = InstrumentFactories.create("STOCK", "GAZP", "Газпром", Currency.RUB);
+        Instrument sber = InstrumentFactories.create(InstrumentType.STOCK, "SBER", "Сбербанк", Currency.RUB);
+        Instrument gazp = InstrumentFactories.create(InstrumentType.STOCK, "GAZP", "Газпром", Currency.RUB);
 
         // История цен как double[] под капотом
         // без обёрток Double и boxing на каждый элемент.

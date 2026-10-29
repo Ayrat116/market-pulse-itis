@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import academy.backend.market_pulse.client.InstrumentQuoteMapper;
 import academy.backend.market_pulse.client.TInvestApiClient;
@@ -63,6 +64,11 @@ public class HttpClientTInvestApiClient implements TInvestApiClient {
         return requestBuilder.build();
     }
 
+    @Override
+    public CompletableFuture<List<Quote>> fetchQuotesAsync() {
+        return CompletableFuture.completedFuture(List.of());
+    }
+
     private List<Quote> toQuotes(HttpResponse<String> response) {
         if (response.statusCode() != 200) {
             throw new TInvestApiException(
@@ -70,4 +76,5 @@ public class HttpClientTInvestApiClient implements TInvestApiClient {
         }
         return InstrumentQuoteMapper.fromJson(response.body());
     }
+
 }

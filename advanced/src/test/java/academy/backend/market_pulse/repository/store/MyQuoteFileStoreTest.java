@@ -1,0 +1,56 @@
+package academy.backend.market_pulse.repository.store;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.util.List;
+
+import academy.backend.market_pulse.dictionary.InstrumentType;
+import academy.backend.market_pulse.repository.store.impl.QuoteFileStoreSkeleton; // Импортируем твою реализацию
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import academy.backend.market_pulse.factory.InstrumentFactories;
+import academy.backend.market_pulse.model.Currency;
+import academy.backend.market_pulse.model.Instrument;
+import academy.backend.market_pulse.model.Quote;
+
+public class MyQuoteFileStoreTest extends QuoteFileStoreContractTest {
+
+    @Override
+    protected QuoteFileStore createStore() {
+        return new QuoteFileStoreSkeleton();
+    }
+
+    @Test
+    void savedQuotesComeBackUnchanged(@TempDir Path tempDir) {
+        QuoteFileStore store = createStore();
+        Path path = tempDir.resolve("quotes.json");
+
+        Instrument sber = InstrumentFactories.create(InstrumentType.STOCK, "SBER", "Сбер", Currency.RUB);
+        Instrument ofz = InstrumentFactories.create(InstrumentType.BOND, "OFZ26233", "ОФЗ 26233", Currency.RUB);
+        List<Quote> quotes = List.of(
+                new Quote(sber, new BigDecimal("250.00"), new BigDecimal("1.20")),
+                new Quote(ofz, new BigDecimal("780.00"), new BigDecimal("-0.15")));
+
+        store.save(path, quotes);
+        List<Quote> loaded = store.load(path);
+
+        assertEquals(2, loaded.size());
+        assertEquals("SBER", loaded.get(0).getInstrument().getTicker());
+        assertEquals(InstrumentType.STOCK, loaded.get(0).getInstrument().getType());
+        assertEquals(Currency.RUB, loaded.get(0).getInstrument().getCurrency());
+        assertEquals(0, new BigDecimal("250.00").compareTo(loaded.get(0).getPrice()));
+        assertEquals("OFZ26233", loaded.get(1).getInstrument().getTicker());
+    }
+
+    @Test
+    void loadingMissingFileReturnsEmptyList(@TempDir Path tempDir) {
+        QuoteFileStore store = createStore();
+        Path path = tempDir.resolve("does-not-exist.json");
+
+        assertTrue(store.load(path).isEmpty());
+    }
+}
