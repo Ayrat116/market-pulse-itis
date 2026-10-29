@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import academy.backend.market_pulse.client.InstrumentQuoteMapper;
 import academy.backend.market_pulse.client.TInvestApiClient;
@@ -60,4 +61,10 @@ public class HttpUrlConnectionTInvestApiClient implements TInvestApiClient {
             }
         }
     }
+
+    @Override
+    public CompletableFuture<List<Quote>> fetchQuotesAsync(){
+        return CompletableFuture.completedFuture(List.of());
+    }
+
 }

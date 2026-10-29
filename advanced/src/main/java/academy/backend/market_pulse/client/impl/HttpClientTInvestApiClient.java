@@ -66,8 +66,7 @@ public class HttpClientTInvestApiClient implements TInvestApiClient {
 
     @Override
     public CompletableFuture<List<Quote>> fetchQuotesAsync() {
-        return httpClient.sendAsync(buildRequest(), HttpResponse.BodyHandlers.ofString())
-                .thenApply(this::toQuotes);
+        return CompletableFuture.completedFuture(List.of());
     }
 
     private List<Quote> toQuotes(HttpResponse<String> response) {
