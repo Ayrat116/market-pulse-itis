@@ -64,6 +64,12 @@ public class HttpClientTInvestApiClient implements TInvestApiClient {
         return requestBuilder.build();
     }
 
+    @Override
+    public CompletableFuture<List<Quote>> fetchQuotesAsync() {
+        return httpClient.sendAsync(buildRequest(), HttpResponse.BodyHandlers.ofString())
+                .thenApply(this::toQuotes);
+    }
+
     private List<Quote> toQuotes(HttpResponse<String> response) {
         if (response.statusCode() != 200) {
             throw new TInvestApiException(

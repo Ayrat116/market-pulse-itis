@@ -1,6 +1,7 @@
 package academy.backend.market_pulse.client;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import academy.backend.market_pulse.exception.TInvestApiException;
 import academy.backend.market_pulse.model.Quote;
@@ -18,4 +19,6 @@ public interface TInvestApiClient {
      * ошибке, неожиданном статусе ответа или битом JSON.
      */
     List<Quote> fetchQuotes();
+
+    CompletableFuture<List<Quote>> fetchQuotesAsync();
 }
